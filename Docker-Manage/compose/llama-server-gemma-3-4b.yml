@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  llama-server-gemma-3-4b:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: llama-server-gemma-3-4b
+    ports:
+      - "11001:11001"
+    volumes:
+      - /home/nick/models:/models
+    command: -m /models/gemma-3-4b-it-q4_0.gguf --port 11001 --host 0.0.0.0 -n 512
+    restart: unless-stopped

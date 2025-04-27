@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:latest  # 你本地已有的 MySQL 镜像
+    container_name: mysql_container
+    restart: unless-stopped # 自动重启
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # 设置 root 密码
+      MYSQL_DATABASE: testdb             # 初始化数据库
+      MYSQL_USER: user                   # 初始化用户
+      MYSQL_PASSWORD: userpassword       # 初始化用户密码
+    ports:
+      - "3306:3306"
+    volumes:
+      - /home/volumes/mysql_container/mysql_data:/var/lib/mysql  # 使用绝对路径的命名卷存储数据库数据
+      - /home/volumes/mysql_container/init:/docker-entrypoint-initdb.d  # 使用绝对路径加载 SQL 初始化脚本（可选）
+
+# 这里不再使用命名卷，而是直接定义为绝对路径的文件夹
+volumes:
+  mysql_data:
+    driver: local
