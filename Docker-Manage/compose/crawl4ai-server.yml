@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  crawl4ai:
+    image: unclecode/crawl4ai:all-amd64          # 使用官方提供的 Crawl4AI 基础镜像
+    container_name: crawl4ai                 # 设置容器名称
+    ports:
+      - "11235:11235"                        # 映射本地端口到容器服务端口
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped                  # 容器异常退出时自动重启（除非手动停止）
+    environment:
+      - CRAWL4AI_API_TOKEN=900414

@@ -15,9 +15,9 @@ fi
 
 # 打印表头
 echo -e "${BLUE}Docker 容器状态:${NC}"
-echo -e "${YELLOW}--------------------------------------------------------------${NC}"
-printf "%-20s %-10s %-15s %-20s\n" "容器名称" "状态" "CPU 使用率" "内存使用"
-echo -e "${YELLOW}--------------------------------------------------------------${NC}"
+echo -e "${YELLOW}--------------------------------------------------------------------------------------------------------${NC}"
+printf "%-20s %-10s %-15s %-20s %-20s\n" "容器名称" "状态" "CPU 使用率" "内存使用" "端口"
+echo -e "${YELLOW}--------------------------------------------------------------------------------------------------------${NC}"
 
 # 遍历所有容器
 docker ps -a --format "{{.ID}} {{.Names}}" | while read -r id name; do
@@ -29,6 +29,10 @@ docker ps -a --format "{{.ID}} {{.Names}}" | while read -r id name; do
     cpu=$(echo "$stats" | awk '{print $1}')
     mem=$(echo "$stats" | awk '{print $2, $3, $4, $5}')
 
+    # 获取端口映射
+    ports=$(docker inspect --format='{{range $p, $conf := .NetworkSettings.Ports}}{{if $conf}}{{printf "%s->%s " $p (index $conf 0).HostPort}}{{end}}{{end}}' "$id")
+    ports=${ports:-"-"}  # 如果没有端口映射则显示 -
+
     # 颜色处理
     if [[ $status == "running" ]]; then
         color=$GREEN  # 运行中
@@ -39,10 +43,9 @@ docker ps -a --format "{{.ID}} {{.Names}}" | while read -r id name; do
     fi
 
     # 格式化输出
-    printf "${color}%-20s %-10s %-15s %-20s${NC}\n" "$name" "$status" "$cpu" "$mem"
+    printf "${color}%-20s %-10s %-15s %-20s %-20s${NC}\n" "$name" "$status" "$cpu" "$mem" "$ports"
 done
 
-echo -e "${YELLOW}--------------------------------------------------------------${NC}"
+echo -e "${YELLOW}--------------------------------------------------------------------------------------------------------${NC}"
 
 read -p "按任意键继续..." -n1 -s
-
