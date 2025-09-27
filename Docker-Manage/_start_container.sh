@@ -7,12 +7,6 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# 确保使用 sudo 运行
-if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}请使用 sudo 运行此脚本！${NC}"
-    exit 1
-fi
-
 echo -e "${BLUE}停止的 Docker 容器:${NC}"
 echo -e "${YELLOW}--------------------------------------------------------------${NC}"
 printf "%-5s %-20s %-25s\n" "编号" "容器名称" "端口映射"

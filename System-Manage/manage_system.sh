@@ -24,6 +24,7 @@ while true; do
     echo -e "${GREEN}1.${NC} 清理系统垃圾"
     echo -e "${GREEN}2.${NC} 查看电池状态"
     echo -e "${GREEN}3.${NC} 查看进程信息"
+    echo -e "${BLUE}==============================${NC}"
     echo -e "${RED}0.${NC} 退出"
     echo -e "${BLUE}==============================${NC}"
     

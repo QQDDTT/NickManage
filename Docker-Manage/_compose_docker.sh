@@ -7,13 +7,6 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# 确保使用 sudo 运行
-if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}请使用 sudo 运行此脚本！${NC}"
-    read -p "按任意键继续..." -n1 -s
-    exit 1
-fi
-
 COMPOSE_DIR="/home/nick/NickManage/Docker-Manage/compose"
 
 # 确保 COMPOSE_DIR 文件夹存在

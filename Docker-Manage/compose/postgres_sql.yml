@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:latest              # 使用 PostgreSQL 镜像
+    container_name: alpaca_postgres
+    restart: always                     # 容器异常退出时自动重启
+    environment:
+      POSTGRES_USER: alpacauser         # 数据库用户名
+      POSTGRES_PASSWORD: alpacapassword # 用户密码
+      POSTGRES_DB: mydb                 # 默认创建的数据库
+    ports:
+      - "5432:5432"                     # 映射到宿主机端口
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # 数据持久化卷
+
+volumes:
+  postgres_data:

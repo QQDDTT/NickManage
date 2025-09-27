@@ -7,13 +7,6 @@ YELLOW='\033[0;33m'   # 黄色（警告）
 BLUE='\033[0;34m'     # 蓝色（信息）
 NC='\033[0m'          # 重置颜色
 
-# 确保脚本以 sudo 运行
-if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}请使用 sudo 运行此脚本！${NC}"
-	read -p "按 Enter 继续..."
-    exit 1
-fi
-
 SCRIPT_DIR="/home/nick/NickManage/Docker-Manage"
 
 # 循环显示菜单
@@ -29,6 +22,7 @@ while true; do
     echo -e "${GREEN}5.${NC} 启动 Docker 容器"
     echo -e "${GREEN}6.${NC} 停止 Docker 容器"
     echo -e "${GREEN}7.${NC} 创建 Docker 容器"
+    echo -e "${GREEN}8.${NC} 进入 Docker 容器"
     echo -e "${RED}0.${NC} 退出"
     echo -e "${BLUE}==============================${NC}"
     
@@ -38,31 +32,35 @@ while true; do
     case "$choice" in
         1)
             echo -e "${YELLOW}正在获取容器信息...${NC}"
-            sudo bash "${SCRIPT_DIR}/_list_container.sh"
+            bash "${SCRIPT_DIR}/_list_container.sh"
             ;;
         2)
             echo -e "${YELLOW}正在获取镜像信息...${NC}"
-            sudo bash "${SCRIPT_DIR}/_list_image.sh"
+            bash "${SCRIPT_DIR}/_list_image.sh"
             ;;
         3)
             echo -e "${YELLOW}正在获取卷信息...${NC}"
-            sudo bash "${SCRIPT_DIR}/_list_volume.sh"
+            bash "${SCRIPT_DIR}/_list_volume.sh"
             ;;
         4)
             echo -e "${YELLOW}正在获取网络信息...${NC}"
-            sudo bash "${SCRIPT_DIR}/_list_network.sh"
+            bash "${SCRIPT_DIR}/_list_network.sh"
             ;;
         5)
             echo -e "${YELLOW}正在启动容器...${NC}"
-            sudo bash "${SCRIPT_DIR}/_start_container.sh"
+            bash "${SCRIPT_DIR}/_start_container.sh"
             ;;
         6)
             echo -e "${YELLOW}正在停止容器...${NC}"
-            sudo bash "${SCRIPT_DIR}/_stop_container.sh"
+            bash "${SCRIPT_DIR}/_stop_container.sh"
             ;;
         7)
             echo -e "${YELLOW}正在创建容器...${NC}"
-            sudo bash "${SCRIPT_DIR}/_compose_docker.sh"
+            bash "${SCRIPT_DIR}/_compose_docker.sh"
+            ;;
+        8)
+            echo -e "${YELLOW}正在进入容器...${NC}"
+            bash "${SCRIPT_DIR}/_enter_container.sh"
             ;;
         0)
     		read -p "按 Enter 退出..."
