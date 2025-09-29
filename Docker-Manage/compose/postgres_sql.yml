@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"                     # 映射到宿主机端口
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # 数据持久化卷
+      - postgres_data:/var/lib/docker/volumes/alpaca_postgres  # 数据持久化卷
 
 volumes:
   postgres_data:

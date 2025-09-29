@@ -12,8 +12,8 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - /home/volumes/mysql_container/mysql_data:/var/lib/mysql  # 使用绝对路径的命名卷存储数据库数据
-      - /home/volumes/mysql_container/init:/docker-entrypoint-initdb.d  # 使用绝对路径加载 SQL 初始化脚本（可选）
+      - /var/lib/docker/volumes/mysql_container/mysql_data:/var/lib/mysql  # 使用绝对路径的命名卷存储数据库数据
+      - /var/lib/docker/volumes/mysql_container/init:/docker-entrypoint-initdb.d  # 使用绝对路径加载 SQL 初始化脚本（可选）
 
 # 这里不再使用命名卷，而是直接定义为绝对路径的文件夹
 volumes:

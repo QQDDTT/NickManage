@@ -46,7 +46,7 @@ while true; do
         exit 0
     elif [[ "$folder_number" =~ ^[Tt]$ ]]; then
         echo -e "${GREEN}正在打开：文档${RESET}"
-        code --no-sandbox "/home/nick/文档"
+        code --no-sandbox "/home/nick/文档/document"
         exit 0
     elif [[ "$folder_number" =~ ^[Ss]$ ]]; then
         echo -e "${GREEN}正在打开：自定义系统工具${RESET}"
