@@ -10,6 +10,10 @@ RESET='\033[0m'
 # 设置工作目录路径
 WORKSPACE_DIR="/home/nick/WorkSpace"
 
+# 加载 LOG_HOME
+LOG_HOME="${LOG_HOME:-/home/nick/logs}"
+mkdir -p "$LOG_HOME"
+
 # 检查工作目录是否存在
 if [ ! -d "$WORKSPACE_DIR" ]; then
     echo -e "${RED}工作目录不存在: $WORKSPACE_DIR${RESET}"
@@ -54,7 +58,7 @@ while true; do
         exit 0
     elif [[ "$folder_number" =~ ^[Ll]$ ]]; then
         echo -e "${GREEN}正在打开：日志${RESET}"
-        code --no-sandbox "/home/log"
+        code --no-sandbox "${LOG_HOME}"
         exit 0
     elif [[ "$folder_number" =~ ^[Qq]$ ]]; then
     	read -p "按 Enter 退出..."

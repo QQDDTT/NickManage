@@ -1,0 +1,24 @@
+version: "3.8"  # 使用 Docker Compose 文件版本 3.8
+
+services:
+  n8n:
+    image: n8nio/n8n:latest       # 拉取官方最新的 n8n 镜像
+    container_name: n8n           # 容器名称
+    restart: unless-stopped               # 容器退出时自动重启，确保服务稳定运行
+    ports:
+      - "5678:5678"               # 映射本地端口 5678 到容器端口 5678（n8n 默认 Web UI 端口）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true           # 启用基本认证，防止未授权访问
+      - N8N_BASIC_AUTH_USER=admin            # 登录用户名
+      - N8N_BASIC_AUTH_PASSWORD=securepassword  # 登录密码（请在生产环境中设置复杂密码）
+      - N8N_HOST=localhost                   # 设置主机名（反向代理时需更改）
+      - N8N_PORT=5678                        # 服务监听端口（默认 5678）
+      - TZ=Asia/Tokyo                        # 设置时区为东京时间（可根据需要更改）
+    volumes:
+      - /var/lib/docker/volumes/n8n_data/_data:/home/node/.n8n            # 本地目录 /home/nick/n8n 挂载到容器的 .n8n 目录（保证持久化）
+
+volumes:
+  n8n_data:
+    external: true    # 如果你使用外部卷，确保已经创建
