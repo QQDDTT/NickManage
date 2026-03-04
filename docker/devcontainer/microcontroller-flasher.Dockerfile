@@ -14,3 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV PATH=$PATH:/home/vscode/.local/bin
+
+# Dev Container 语言识别用
+ENV LANG_RUNTIME="python"
+ENV LANG_VERSION="3.12"
+
+WORKDIR /workspace

@@ -11,7 +11,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - /home/nick/WorkSpace/logs/loki:/loki
+      - /home/nick/logs/loki:/loki
     command: -config.file=/etc/loki/local-config.yaml
 
   grafana:
@@ -22,7 +22,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /home/nick/WorkSpace/logs/grafana:/var/lib/grafana
+      - /home/nick/logs/grafana:/var/lib/grafana
     env_file:
       - ../env/logging.env
     depends_on:
@@ -35,7 +35,7 @@ services:
     volumes:
       - /var/log:/var/log:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /home/nick/WorkSpace/logs/promtail:/etc/promtail
+      - /home/nick/logs/promtail:/etc/promtail
     command: -config.file=/etc/promtail/config.yaml
     depends_on:
       - loki

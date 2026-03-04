@@ -7,4 +7,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 USER vscode
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+
+# Dev Container 语言识别用
+ENV LANG_RUNTIME="rust"
+ENV LANG_VERSION="1.78"
 ENV PATH=/home/vscode/.cargo/bin:$PATH
+
+WORKDIR /workspace

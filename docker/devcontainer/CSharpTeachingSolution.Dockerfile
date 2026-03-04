@@ -11,3 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV DOTNET_ROOT=/usr/local/dotnet
 ENV PATH=$PATH:/usr/local/dotnet
+
+# Dev Container 语言识别用
+ENV LANG_RUNTIME="dotnet"
+ENV LANG_VERSION="8.0"
+
+WORKDIR /workspace

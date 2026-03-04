@@ -10,3 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -sf /usr/bin/python3 /usr/local/bin/python \
     && ln -sf /usr/bin/pip3 /usr/local/bin/pip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Dev Container 语言识别用
+ENV LANG_RUNTIME="python"
+ENV LANG_VERSION="3.12"
+
+WORKDIR /workspace
