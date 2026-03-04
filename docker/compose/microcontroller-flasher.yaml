@@ -1,0 +1,29 @@
+# Microcontroller_Flasher_Project 开发容器
+# 技术栈：Python 3 + PlatformIO CLI（ESP32 C/C++ 嵌入式开发）
+# 用途：编译 ESP32/ESP8266 固件，bind mount 项目目录，日志接入 Loki
+# 注意：固件烧录（pio run -t upload）需要宿主机 USB 设备，容器内仅支持编译
+
+services:
+  microcontroller-flasher-dev:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+    container_name: microcontroller-flasher-dev
+    volumes:
+      - /home/nick/WorkSpace/Microcontroller_Flasher_Project:/workspace:cached
+    working_dir: /workspace
+    command: >
+      /bin/bash -c "
+      for i in {1..60}; do
+        if ps ax | grep -iE 'vscode-server|cursor|antigravity' | grep -v grep > /dev/null; then break; fi;
+        sleep 2;
+      done;
+      while ps ax | grep -iE 'vscode-server|cursor|antigravity' | grep -v grep > /dev/null; do
+        sleep 5;
+      done;
+      sleep 5;
+      exit 0;
+      "
+    logging:
+      driver: loki
+      options:
+        loki-url: "http://localhost:3100/loki/api/v1/push"
+        loki-external-labels: "project=microcontroller-flasher"

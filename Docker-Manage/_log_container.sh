@@ -34,7 +34,7 @@ echo -e "${YELLOW}--------------------------------------------------------------
 
 # 重复读取直到输入有效或输入 0
 while true; do
-    read -p "请输入要进入的容器编号（输入 0 退出）: " input_index
+    read -p "请输入要查看日志的容器编号（输入 0 退出）: " input_index
 
     # 输入的是 0：退出
     if [[ "$input_index" == "0" ]]; then
@@ -58,7 +58,7 @@ selected_cname="${container_names[$input_index]}"
 echo -e "将打开新终端并进入容器: ${GREEN}$selected_cname${NC}"
 
 # 使用新终端打开并进入容器
-gnome-terminal -- bash -c "docker exec -it $selected_cid /bin/bash || docker exec -it $selected_cid /bin/sh; exec bash"
+gnome-terminal -- bash -c "docker logs -f $selected_cid; exec bash"
 
 read -p "按 Enter 键退出..."
 exit 0

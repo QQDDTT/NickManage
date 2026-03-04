@@ -21,8 +21,10 @@ while true; do
     echo -e "${BLUE}==============================${NC}"
     echo -e "${GREEN}5.${NC} 启动 Docker 容器"
     echo -e "${GREEN}6.${NC} 停止 Docker 容器"
-    echo -e "${GREEN}7.${NC} 创建 Docker 容器"
-    echo -e "${GREEN}8.${NC} 进入 Docker 容器"
+    echo -e "${GREEN}7.${NC} 查看 Docker 容器日志"
+    echo -e "${BLUE}==============================${NC}"
+    echo -e "${GREEN}8.${NC} 删除 Docker 容器"
+    echo -e "${GREEN}9.${NC} 删除 Docker 卷"
     echo -e "${RED}0.${NC} 退出"
     echo -e "${BLUE}==============================${NC}"
     
@@ -55,12 +57,16 @@ while true; do
             bash "${SCRIPT_DIR}/_stop_container.sh"
             ;;
         7)
-            echo -e "${YELLOW}正在创建容器...${NC}"
-            bash "${SCRIPT_DIR}/_compose_docker.sh"
+            echo -e "${YELLOW}正在查看容器日志...${NC}"
+            bash "${SCRIPT_DIR}/_log_container.sh"
             ;;
         8)
-            echo -e "${YELLOW}正在进入容器...${NC}"
-            bash "${SCRIPT_DIR}/_enter_container.sh"
+            echo -e "${YELLOW}正在删除容器...${NC}"
+            bash "${SCRIPT_DIR}/_remove_container.sh"
+            ;;
+        9)
+            echo -e "${YELLOW}正在删除 Docker 卷...${NC}"
+            bash "${SCRIPT_DIR}/_remove_volume.sh"
             ;;
         0)
     		read -p "按 Enter 退出..."

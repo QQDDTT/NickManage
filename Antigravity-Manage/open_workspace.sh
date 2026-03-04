@@ -45,20 +45,33 @@ while true; do
     # 根据输入处理
     if [[ "$folder_number" =~ ^[0-9]+$ ]] && [ "$folder_number" -ge 1 ] && [ "$folder_number" -lt "$counter" ]; then
         selected_folder="${folders[folder_number-1]}"
-        echo -e "${GREEN}正在打开：$selected_folder${RESET}"
-        code --no-sandbox "$selected_folder"
+        # 移除末尾斜杠以精确匹配
+        folder_path=$(echo "$selected_folder" | sed 's:/*$::')
+        
+        echo -e "${GREEN}正在查找并启动关联的开发容器...${RESET}"
+        # 自动查找到映射了该目录的 compose 文件
+        compose_file=$(grep -l "${folder_path}:/workspace" /home/nick/NickManage/docker/compose/*.yaml 2>/dev/null | head -n 1)
+        if [ -n "$compose_file" ]; then
+            echo -e "${YELLOW}找到容器配置: $(basename "$compose_file")，正在启动后台服务...${RESET}"
+            docker compose -f "$compose_file" up -d
+        else
+            echo -e "${RED}未找到对应的 Docker Compose 文件，跳过容器启动。${RESET}"
+        fi
+
+        echo -e "${GREEN}正在打开 Antigravity：$folder_path${RESET}"
+        antigravity --no-sandbox "$folder_path"
         exit 0
     elif [[ "$folder_number" =~ ^[Tt]$ ]]; then
         echo -e "${GREEN}正在打开：文档${RESET}"
-        code --no-sandbox "/home/nick/文档/document"
+        antigravity --no-sandbox "/home/nick/文档/document"
         exit 0
     elif [[ "$folder_number" =~ ^[Ss]$ ]]; then
         echo -e "${GREEN}正在打开：自定义系统工具${RESET}"
-        code --no-sandbox "/home/nick/NickManage"
+        antigravity --no-sandbox "/home/nick/NickManage"
         exit 0
     elif [[ "$folder_number" =~ ^[Ll]$ ]]; then
         echo -e "${GREEN}正在打开：日志${RESET}"
-        code --no-sandbox "${LOG_HOME}"
+        antigravity --no-sandbox "${LOG_HOME}"
         exit 0
     elif [[ "$folder_number" =~ ^[Qq]$ ]]; then
     	read -p "按 Enter 退出..."
