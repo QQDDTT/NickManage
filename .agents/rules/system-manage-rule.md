@@ -47,7 +47,7 @@ management-project/
 │   ├── manifests/            # 原生 YAML 清单（自研服务，每项目一个子目录）
 │   └── helm/                 # Helm Chart 管理（第三方服务，每项目一个子目录）
 ├── ci/                       # CI/CD 流水线配置
-└── scripts/                  # 自动化 Shell 脚本
+└── 
 ```
 
 ---

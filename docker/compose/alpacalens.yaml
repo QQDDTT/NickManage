@@ -4,23 +4,14 @@
 
 services:
   alpacalens-dev:
-    image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+    build:
+      context: ../devcontainer
+      dockerfile: AlpacaLens.Dockerfile
     container_name: alpacalens-dev
     volumes:
       - /home/nick/WorkSpace/AlpacaLens:/workspace:cached
     working_dir: /workspace
-    command: >
-      /bin/bash -c "
-      for i in {1..60}; do
-        if ps ax | grep -iE 'vscode-server|cursor|antigravity' | grep -v grep > /dev/null; then break; fi;
-        sleep 2;
-      done;
-      while ps ax | grep -iE 'vscode-server|cursor|antigravity' | grep -v grep > /dev/null; do
-        sleep 5;
-      done;
-      sleep 5;
-      exit 0;
-      "
+    command: sleep infinity
     logging:
       driver: loki
       options:

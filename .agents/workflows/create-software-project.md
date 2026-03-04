@@ -18,16 +18,23 @@ description: 交互式创建新的软件开发工程 (type: software)
 ### Step 4: 生成 Docker Compose 编排
 - **动作**: 在 `/home/nick/NickManage/docker/compose/` 目录下生成 `<项目名>.yaml` 文件。
 - **强制规范**:
-  - `type: software` 必须使用基础镜像：`image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04` (禁止使用 build)。
+  - `type: software` 必须根据项目技术栈在 `/home/nick/NickManage/docker/devcontainer/` 下生成专属 `<项目名>.Dockerfile`。
+  - **语言集成规范**: Dockerfile 中必须包含所选语言（Java、Python、Node、Rust 等）的 `RUN` 安装指令及对应的 `ENV` 环境变量设置。
+  - `docker/compose/<项目名>.yaml` 必须使用 `build` 指令引用该 Dockerfile。
   - 必须包含挂载点：`- /home/nick/WorkSpace/<项目名>:/workspace:cached`
   - 必须加入 Loki 标准日志驱动配置。
-  - `command: >` 必须使用包含断联检测（5秒退出）的自动停机心跳脚本监控 IDE 存活。
+  - 必须使用 `command: sleep infinity` 确保容器在没有 IDE 连接时保持运行。
 
 ### Step 5: 宿主机目录初始化与文档输出
 - **动作 1**: 在宿主机的规范路径 `/home/nick/WorkSpace/<项目名>` 下自动创建项目的物理根目录。
 - **动作 2**: 在此根目录内生成标准的 `.project` 标识文件（标明 `type: software` 及 `name: <项目名>`）。
 - **动作 3**: 根据所选的技术栈及构思，直接在根目录或 `docs/` 下生成第一版《架构设计书》。
+- **动作 4**: 在根目录下创建 `.devcontainer/devcontainer.json`，配置如下：
+  - `image`: `"mcr.microsoft.com/devcontainers/base:ubuntu-24.04"`
+  - `features`: 包含 `docker-outside-of-docker` 和 `kubectl-helm-minikube` (installHelm=true)。
+  - `workspaceFolder`: `"/workspaces/<项目名>"`
+  - `mounts`: 包含项目目录绑定挂载及宿主机 `${localEnv:HOME}/.kube` 的只读挂载。
 
 ### Step 6: 容器实例化启动
 - **动作**: 执行命令 `docker compose -f /home/nick/NickManage/docker/compose/<项目名>.yaml up -d` 在后台拉起该新项目的纯净开发容器。
-- **结束语**: 告知用户容器已就绪，他们可以通过 `open_workspace.sh` 或者自己利用 `scripts/install_xxx.sh` 对这个裸容器注入相应语言的运行时。
+- **结束语**: 告知用户容器已就绪，且已根据技术栈预装了对应的语言环境。建议通过 `open_workspace.sh` 打开项目并开始开发。
