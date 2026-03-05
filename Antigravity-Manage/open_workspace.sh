@@ -47,7 +47,11 @@ while true; do
         selected_folder="${folders[folder_number-1]}"
         folder_path=$(echo "$selected_folder" | sed 's:/*$::')
 
-        antigravity --no-sandbox "$folder_path"
+        echo -e "${GREEN}正在打开 Dev Container：$folder_path${RESET}"
+        devcontainer_path="$folder_path/.devcontainer/devcontainer.json"
+        JSON=$(printf '{"workspacePath":"%s","devcontainerPath":"%s"}' "$folder_path" "$devcontainer_path")
+        HEX=$(echo -n "$JSON" | xxd -p | tr -d '\n')
+        antigravity --no-sandbox --folder-uri "vscode-remote://dev-container+${HEX}/workspace"
         exit 0
 
     elif [[ "$folder_number" =~ ^[Tt]$ ]]; then

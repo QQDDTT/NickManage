@@ -60,7 +60,7 @@ WORKDIR /workspace
 ## Step 5 — 目录初始化与文档
 
 ```bash
-mkdir -p /home/nick/WorkSpace/<项目名>/{docs,.devcontainer}
+mkdir -p /home/nick/WorkSpace/<项目名>/{docs,.devcontainer,.agent/rules}
 ```
 
 **`.project`** — `/home/nick/WorkSpace/<项目名>/.project`
@@ -73,6 +73,28 @@ created_at: <ISO8601>
 ```
 
 **架构设计书** — `docs/architecture.md`（按技术栈生成，含概述、模块划分、数据流、部署拓扑）
+
+**`soft-rule.md`** — `.agent/rules/soft-rule.md`
+```markdown
+# 软件开发工程规范
+
+> 仅适用于 `type: software` 工程。
+
+## 1. 工程定位
+
+在 devcontainer 环境中开发应用功能代码，构建产物以容器镜像方式交付。
+
+## 2. 目录结构
+
+```
+project/
+├── .project
+├── .devcontainer/     # devcontainer 配置
+├── src/               # 应用源代码
+├── docker/            # 构建镜像所需 Dockerfile 及 Compose 文件
+└── docs/              # 项目文档（按需创建）
+```
+\```
 
 **`devcontainer.json`** — `.devcontainer/devcontainer.json`
 
@@ -87,7 +109,9 @@ created_at: <ISO8601>
   "workspaceFolder": "/workspace",
   "mounts": [
     "source=/home/nick/WorkSpace/<项目名>,target=/workspace,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.kube,target=/root/.kube,type=bind,readonly"
+    "source=/home/nick/.kube,target=/root/.kube,type=bind,readonly",
+    "source=/home/nick/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
+    "source=/home/nick/.ssh,target=/vscode/.ssh,type=bind,readonly"
   ],
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
@@ -105,7 +129,9 @@ created_at: <ISO8601>
   "service": "app",
   "workspaceFolder": "/workspace",
   "mounts": [
-    "source=${localEnv:HOME}/.kube,target=/root/.kube,type=bind,readonly"
+    "source=/home/nick/.kube,target=/vscode/.kube,type=bind,readonly",
+    "source=/home/nick/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
+    "source=/home/nick/.ssh,target=/vscode/.ssh,type=bind,readonly"
   ],
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},

@@ -220,8 +220,10 @@ services:
 日志数据统一存放在以下路径，**须在启动前手动创建**，并加入 `.gitignore`：
 
 ```
-/home/nick/WorkSpace/logs/
+/home/nick/.log/
 ├── loki/        # Loki 日志数据
+│   ├── dev/     # devcontainer 开发环境日志 (路径：/home/nick/.log/loki/dev/<项目名>)
+│   └── prod/    # 部署产品/服务日志 (路径：/home/nick/.log/loki/prod/<服务名>)
 ├── grafana/     # Grafana 配置与仪表盘
 └── promtail/    # Promtail 采集配置文件
 ```
@@ -244,7 +246,7 @@ services:
 
 1. 禁止使用 `latest` 镜像标签
 2. 禁止硬编码 `GF_SECURITY_ADMIN_PASSWORD`，须通过 `docker/env/logging.env` 注入
-3. 禁止将 `/home/nick/WorkSpace/logs/` 下的数据目录提交到 Git
+3. 禁止将 `/home/nick/.log/` 下的数据目录提交到 Git
 
 ---
 

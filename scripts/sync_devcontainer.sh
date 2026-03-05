@@ -52,6 +52,7 @@ for project in "${!LANG_RUNTIME[@]}"; do
   project_dir="$WORKSPACE/$project"
   devcontainer_dir="$project_dir/.devcontainer"
   devcontainer_file="$devcontainer_dir/devcontainer.json"
+  project_info_file="$project_dir/.project"
   
   # 检查项目目录是否存在
   if [ ! -d "$project_dir" ]; then
@@ -59,42 +60,56 @@ for project in "${!LANG_RUNTIME[@]}"; do
     continue
   fi
   
+  # 提取项目显示名称（从 .project 中读取，若不存在则使用文件夹名）
+  display_name="$project"
+  if [ -f "$project_info_file" ]; then
+    display_name=$(grep "^name:" "$project_info_file" | cut -d: -f2 | xargs)
+  fi
+
   mkdir -p "$devcontainer_dir"
   
   runtime="${LANG_RUNTIME[$project]}"
   version="${LANG_VERSION[$project]}"
   has_compose="${HAS_COMPOSE[$project]:-false}"
+  github_user="QQDDTT"
   
   if [ "$has_compose" = "true" ]; then
     # 情况B: 有附加中间件，使用 dockerComposeFile
     compose_file="$NICKMANAGE/docker/compose/${project}.yaml"
     cat > "$devcontainer_file" <<EOF
 {
-  "name": "${project}",
+  "name": "${display_name}",
   "dockerComposeFile": "${compose_file}",
   "service": "app",
   "workspaceFolder": "/workspace",
   "mounts": [
-    "source=\${localEnv:HOME}/.kube,target=/root/.kube,type=bind,readonly"
+    "source=\${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,readonly",
+    "source=\${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
+    "source=\${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly"
   ],
+  "remoteUser": "vscode",
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": { "installHelm": true }
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "installHelm": true,
+      "installMinikube": false
+    }
   },
   "remoteEnv": {
     "LANG_RUNTIME": "${runtime}",
-    "LANG_VERSION": "${version}"
+    "LANG_VERSION": "${version}",
+    "GITHUB_USER": "${github_user}",
+    "PROJECT_NAME": "${display_name}"
   }
 }
 EOF
   else
     # 情况A: 无附加中间件，直接 build Dockerfile
-    # 检查是否有自定义 Dockerfile 名称映射
     dockerfile_key="${DOCKERFILE_NAME[$project]:-$project}"
-    dockerfile_path="$NICKMANAGE/docker/devcontainer/${dockerfile_key}.Dockerfile"
+    dockerfile_path="$NICKMANAGE/docker/devcontainer/base-dev.Dockerfile"
     cat > "$devcontainer_file" <<EOF
 {
-  "name": "${project}",
+  "name": "${display_name}",
   "build": {
     "dockerfile": "${dockerfile_path}",
     "context": "${NICKMANAGE}/docker/devcontainer"
@@ -102,21 +117,29 @@ EOF
   "workspaceFolder": "/workspace",
   "mounts": [
     "source=${WORKSPACE}/${project},target=/workspace,type=bind,consistency=cached",
-    "source=\${localEnv:HOME}/.kube,target=/root/.kube,type=bind,readonly"
+    "source=\${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,readonly",
+    "source=\${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
+    "source=\${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly"
   ],
+  "remoteUser": "vscode",
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": { "installHelm": true }
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "installHelm": true,
+      "installMinikube": false
+    }
   },
   "remoteEnv": {
     "LANG_RUNTIME": "${runtime}",
-    "LANG_VERSION": "${version}"
+    "LANG_VERSION": "${version}",
+    "GITHUB_USER": "${github_user}",
+    "PROJECT_NAME": "${display_name}"
   }
 }
 EOF
   fi
   
-  echo -e "${GREEN}[✓] ${project} → devcontainer.json 已更新 (${runtime} ${version})${RESET}"
+  echo -e "${GREEN}[✓] ${project} → devcontainer.json 已更新 (GitHub: ${github_user}, Project: ${display_name})${RESET}"
 done
 
 echo ""
