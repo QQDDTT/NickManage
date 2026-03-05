@@ -14,7 +14,16 @@ printf "%-20s %-10s %-15s %-20s %-20s\n" "容器名称" "状态" "CPU 使用率"
 echo -e "${YELLOW}--------------------------------------------------------------------------------------------------------${NC}"
 
 # 遍历所有容器
-docker ps -a --format "{{.ID}} {{.Names}}" | while read -r id name; do
+docker ps -a --format "{{.ID}}\t{{.Names}}\t{{.Labels}}" | while IFS=$'\t' read -r id name labels; do
+    # 提取 devcontainer 名称
+    name_display="$name"
+    if [[ "$labels" == *"devcontainer.local_folder="* ]]; then
+        local_folder=$(echo "$labels" | grep -oP 'devcontainer.local_folder=\K[^,]+')
+        if [[ -n "$local_folder" ]]; then
+            name_display=$(basename "$local_folder")"-dev"
+        fi
+    fi
+
     # 获取容器状态
     status=$(docker inspect --format '{{.State.Status}}' "$id")
 
@@ -37,7 +46,7 @@ docker ps -a --format "{{.ID}} {{.Names}}" | while read -r id name; do
     fi
 
     # 格式化输出
-    printf "${color}%-20s %-10s %-15s %-20s %-20s${NC}\n" "$name" "$status" "$cpu" "$mem" "$ports"
+    printf "${color}%-20s %-10s %-15s %-20s %-20s${NC}\n" "$name_display" "$status" "$cpu" "$mem" "$ports"
 done
 
 echo -e "${YELLOW}--------------------------------------------------------------------------------------------------------${NC}"
