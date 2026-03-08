@@ -1,0 +1,33 @@
+services:
+  # 共享层：Whisper 语音转文字服务
+  # AI 服务采用 Bind Mount，模型目录指向 /home/nick/NickManage/mounts/share/models
+  whisper:
+    image: mioyisama/whisper-server:latest
+    container_name: share-whisper
+    restart: always
+    ports:
+      - "5006:8080"
+    volumes:
+      - /home/nick/NickManage/mounts/share/models:/models
+    env_file:
+      - ../env/share-whisper.env
+    command:
+      - "-m"
+      - "/models/stt/whisper-large-v3-turbo-q8_0.bin"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8080"
+    deploy:
+      resources:
+        # 大幅降低内存预留，允许交换内存
+        reservations:
+          memory: 1G
+    # AI 推理服务权重较低，优先牺牲
+    oom_score_adj: -200
+    networks:
+      - nick-net
+
+networks:
+  nick-net:
+    external: true

@@ -1,0 +1,20 @@
+services:
+  dev-LifeScript:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+    container_name: dev-LifeScript
+    ports:
+      - "8006:8000"
+    volumes:
+      - /home/nick/WorkSpace/LifeScript:/workspace/LifeScript:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - nick-net
+    command: tail -f /dev/null
+    deploy:
+      resources:
+        limits:
+          memory: 2gb
+
+networks:
+  nick-net:
+    external: true

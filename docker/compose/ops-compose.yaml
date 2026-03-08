@@ -1,0 +1,75 @@
+networks:
+  nick-net:
+    name: nick-net
+    driver: bridge
+
+services:
+
+  ops-traefik:
+    image: traefik:v2.11
+    container_name: ops-traefik
+    restart: unless-stopped
+    mem_limit: 50m
+    oom_score_adj: -999
+    ports:
+      - "80:80"
+      - "443:443"
+      - "3000:8080"
+    environment:
+      - DOCKER_API_VERSION=1.41
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../../mounts/ops/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ../../mounts/ops/traefik/dynamic:/etc/traefik/dynamic
+      - ../../mounts/ops/traefik/acme.json:/etc/traefik/acme.json
+    networks:
+      - nick-net
+
+  ops-gitea:
+    image: gitea/gitea:1.21.0
+    container_name: ops-gitea
+    restart: unless-stopped
+    mem_limit: 150m
+    oom_score_adj: -999
+    ports:
+      - "3022:22"          # SSH 直通
+    env_file:
+      - ../env/ops.env
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    volumes:
+      - ../../mounts/share/gitea:/data
+    networks:
+      - nick-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ops-gitea.rule=Host(`gitea.local`)"
+      - "traefik.http.routers.ops-gitea.entrypoints=websecure"
+      - "traefik.http.routers.ops-gitea.tls=true"
+      - "traefik.http.routers.ops-gitea.tls.certresolver=letsencrypt"
+      - "traefik.http.services.ops-gitea.loadbalancer.server.port=3000"
+
+  ops-loki:
+    image: grafana/loki:3.0.0
+    container_name: ops-loki
+    restart: unless-stopped
+    mem_limit: 100m
+    oom_score_adj: -999
+    volumes:
+      - /home/nick/.logs/loki:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - nick-net
+
+  ops-vector:
+    image: timberio/vector:0.38.0-alpine
+    container_name: ops-vector
+    restart: unless-stopped
+    mem_limit: 50m
+    oom_score_adj: -999
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /home/nick/.logs/vector:/var/lib/vector
+    networks:
+      - nick-net

@@ -1,0 +1,35 @@
+services:
+  # 共享层：BGE-M3 向量嵌入服务 (Embedding)
+  # 使用 llama.cpp server 镜像来加载 GGUF 格式的嵌入模型
+  embedding:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: share-embedding
+    restart: always
+    ports:
+      - "5009:8080"
+    volumes:
+      - /home/nick/NickManage/mounts/share/models:/models
+    env_file:
+      - ../env/share-embedding.env
+    command:
+      - "-m"
+      - "/models/embedding/bge-m3-embeddings-q4_k_m.gguf"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8080"
+      - "--embedding"
+      - "--threads"
+      - "2"
+    deploy:
+      resources:
+        # 预期占用 512MB
+        reservations:
+          memory: 512M
+    oom_score_adj: -200
+    networks:
+      - nick-net
+
+networks:
+  nick-net:
+    external: true

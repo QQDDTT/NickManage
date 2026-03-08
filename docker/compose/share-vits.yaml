@@ -1,0 +1,23 @@
+services:
+  # 共享层：VITS 文字转语音服务
+  # AI 服务采用 Bind Mount，模型和配置指向 mounts/share/models 和 mounts/share/vits
+  vits:
+    image: artrajz/vits-simple-api:latest
+    container_name: share-vits
+    restart: always
+    ports:
+      - "5007:23456"
+    volumes:
+      - /home/nick/NickManage/mounts/share/models:/models:ro
+      - /home/nick/NickManage/mounts/share/vits/config.yaml:/app/config.yaml
+    deploy:
+      resources:
+        reservations:
+          memory: 2G
+    oom_score_adj: -500
+    networks:
+      - nick-net
+
+networks:
+  nick-net:
+    external: true

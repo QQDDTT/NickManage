@@ -1,0 +1,36 @@
+services:
+  # 共享层：ChromaDB 向量数据库
+  # 数据库采用 Named Volume，挂载点指向 volumes/share/chromadb
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: share-chromadb
+    restart: always
+    ports:
+      - "5002:8000"
+    environment:
+      - ALLOW_RESET=false
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/volumes/chroma
+    volumes:
+      - share_chromadb_data:/volumes/chroma
+    env_file:
+      - ../env/share-chromadb.env
+    deploy:
+      resources:
+        reservations:
+          memory: 256M
+    oom_score_adj: -500
+    networks:
+      - nick-net
+
+volumes:
+  share_chromadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../volumes/share/chromadb
+
+networks:
+  nick-net:
+    external: true

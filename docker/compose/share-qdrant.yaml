@@ -1,0 +1,32 @@
+services:
+  # 共享层：Qdrant 向量数据库
+  # 数据库采用 Named Volume，挂载点指向 volumes/share/qdrant
+  qdrant:
+    image: qdrant/qdrant
+    container_name: share-qdrant
+    restart: always
+    ports:
+      - "5003:6333"
+    volumes:
+      - share_qdrant_data:/qdrant/storage
+    env_file:
+      - ../env/share-qdrant.env
+    deploy:
+      resources:
+        reservations:
+          memory: 256M
+    oom_score_adj: -500
+    networks:
+      - nick-net
+
+volumes:
+  share_qdrant_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../volumes/share/qdrant
+
+networks:
+  nick-net:
+    external: true

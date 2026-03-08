@@ -1,0 +1,20 @@
+services:
+  dev-AlpacaLens:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+    container_name: dev-AlpacaLens
+    ports:
+      - "8001:8000"
+    volumes:
+      - /home/nick/WorkSpace/AlpacaLens:/workspace/AlpacaLens:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - nick-net
+    command: tail -f /dev/null
+    deploy:
+      resources:
+        limits:
+          memory: 2gb
+
+networks:
+  nick-net:
+    external: true

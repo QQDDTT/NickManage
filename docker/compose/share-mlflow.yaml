@@ -1,0 +1,35 @@
+services:
+  # 共享层：MLFlow 模型管理服务
+  # 数据库/数据采用 Named Volume，挂载点指向 volumes/share/mlflow
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: share-mlflow
+    restart: always
+    ports:
+      - "5008:5000"
+    environment:
+      - MLFLOW_SERVER_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+    command: ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000"]
+    volumes:
+      - share_mlflow_data:/mlflow
+    env_file:
+      - ../env/share-mlflow.env
+    deploy:
+      resources:
+        reservations:
+          memory: 256M
+    oom_score_adj: -500
+    networks:
+      - nick-net
+
+volumes:
+  share_mlflow_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../volumes/share/mlflow
+
+networks:
+  nick-net:
+    external: true

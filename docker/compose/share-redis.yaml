@@ -1,0 +1,37 @@
+services:
+  # 共享层：Redis 缓存与消息队列
+  redis:
+    image: redis:7-alpine
+    container_name: share-redis
+    restart: always
+    ports:
+      - "5000:6379"
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - "${REDIS_PASSWORD}"
+    volumes:
+      - share_redis_data:/data
+    env_file:
+      - ../env/share-redis.env
+    deploy:
+      resources:
+        reservations:
+          memory: 100M
+    oom_score_adj: -500
+    networks:
+      - nick-net
+
+volumes:
+  share_redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../../volumes/share/redis
+
+networks:
+  nick-net:
+    external: true
