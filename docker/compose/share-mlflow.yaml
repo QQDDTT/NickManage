@@ -4,6 +4,11 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
     container_name: share-mlflow
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=share"
+      - "nms.proxy=false"
+    env_file: .env
     restart: always
     ports:
       - "5008:5000"
@@ -12,15 +17,13 @@ services:
     command: ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000"]
     volumes:
       - share_mlflow_data:/mlflow
-    env_file:
-      - ../env/share-mlflow.env
     deploy:
       resources:
         reservations:
           memory: 256M
     oom_score_adj: -500
     networks:
-      - nick-net
+      - nms
 
 volumes:
   share_mlflow_data:
@@ -28,8 +31,8 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ../../volumes/share/mlflow
+      device: ${MNG_HOME}/volumes/share/mlflow
 
 networks:
-  nick-net:
+  nms:
     external: true

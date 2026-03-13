@@ -1,0 +1,62 @@
+services:
+  dev-japanese-learning-app:
+    image: dev-image:latest
+    container_name: dev-japanese-learning-app
+    hostname: dev-japanese-learning-app
+    labels:
+      - "nms.collect=false"
+      - "nms.layer=dev"
+      - "nms.proxy=false"
+    env_file: .env
+    
+    # --- 1. 权限与内核安全解锁 ---
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    pid: "host" 
+
+    # --- 2. 资源保障 (核心修复) ---
+    deploy:
+      resources:
+        limits:
+          memory: 4096M
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+    ports:
+      - "8008:8000"
+
+    # --- 3. 环境变量优化 ---
+    environment:
+      - PROJECT_NAME=japanese-learning-app
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/vscode/.local/bin
+      - ANTIGRAVITY_LOG_LEVEL=debug
+      - GOMAXPROCS=2
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - CUDA_VISIBLE_DEVICES=-1
+      - NO_GPU=1
+
+    # --- 4. 目录挂载 (纯净云端化) ---
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+      - ${NODE_NPM}:/home/vscode/.npm
+      - ${USER_HOME}/.gemini:/home/vscode/.gemini
+      - ${MNG_DIR}/volumes/share/git/gitconfig:/home/vscode/.gitconfig:ro
+      - ${MNG_DIR}/volumes/share/git/.git-credentials:/home/vscode/.git-credentials:ro
+    
+    # --- 5. 自动化启动脚本 (权限与就绪) ---
+    entrypoint: >
+      /bin/sh -c "
+      chown -R vscode:vscode /workspaces/$$PROJECT_NAME 2>/dev/null;
+      exec tail -f /dev/null
+      "
+
+    networks:
+      - nms
+
+networks:
+  nms:
+    external: true

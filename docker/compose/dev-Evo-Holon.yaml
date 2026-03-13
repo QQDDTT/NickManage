@@ -1,0 +1,69 @@
+services:
+  dev-Evo-Holon:
+    image: dev-image:latest
+    container_name: dev-Evo-Holon
+    hostname: dev-Evo-Holon
+    labels:
+      - "nms.collect=false"
+      - "nms.layer=dev"
+      - "nms.proxy=false"
+    env_file: .env
+    
+    # --- 1. 权限与核心安全解锁 ---
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    pid: "host" # 允许 LS 进程更稳定地与父进程通信
+
+    # --- 2. 资源保障 (防止内存溢出和文件句柄耗尽) ---
+    deploy:
+      resources:
+        limits:
+          memory: 4096M # 固化 4GB 内存，彻底告别 OOM 崩溃
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+    ports:
+      - "8003:8000"
+
+    # --- 3. 环境变量固化 (优化运行时) ---
+    environment:
+      - PROJECT_NAME=Evo-Holon
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/vscode/.local/bin
+      - ANTIGRAVITY_LOG_LEVEL=debug
+      - GOMAXPROCS=2             # 限制 CPU 瞬间并发，保护 Surface 散热和稳定性
+      - NODE_OPTIONS=--max-old-space-size=4096 # 给 Node.js 扩展主机足够内存
+      - CUDA_VISIBLE_DEVICES=-1  # 强制屏蔽 GPU 探测，防止驱动冲突
+      - NO_GPU=1
+
+    # --- 4. 目录挂载 (纯净云端化) ---
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${PYTHON_PIP}:/home/vscode/.cache/pip
+      - ${NODE_NPM}:/home/vscode/.npm
+      - ${USER_HOME}/.gemini:/home/vscode/.gemini
+      - ${MNG_DIR}/volumes/share/git/gitconfig:/home/vscode/.gitconfig:ro
+      - ${MNG_DIR}/volumes/share/git/.git-credentials:/home/vscode/.git-credentials:ro
+      - ${RUST_CARGO}:/home/vscode/.cargo
+      - ${GO_MOD}:/home/vscode/go/pkg/mod
+      - ${USER_HOME}/.gemini:/home/vscode/.gemini
+      - ${MNG_DIR}/volumes/share/git/gitconfig:/home/vscode/.gitconfig:ro
+      - ${MNG_DIR}/volumes/share/git/.git-credentials:/home/vscode/.git-credentials:ro
+    
+    # --- 5. 权限自动纠正 (关键：一劳永逸的核心) ---
+    # 每次启动时自动执行权限修复，确保 vscode 用户有权读写挂载的目录
+    entrypoint: >
+      /bin/sh -c "
+      chown -R vscode:vscode /home/vscode/.antigravity /home/vscode/.gemini /logs 2>/dev/null;
+      find /home/vscode/.antigravity-server -name 'language_server_linux_x64' -exec chmod +x {} \;;
+      exec tail -f /dev/null
+      "
+
+    networks:
+      - nms
+
+networks:
+  nms:
+    external: true

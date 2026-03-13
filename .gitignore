@@ -1,5 +1,17 @@
 .agents
+.agent
 .devcontainer
+.vscode
 link/
-mounts/
-volumes/
+
+# --- 数据目录 (仅保留结构) ---
+
+volumes/**
+!volumes/**/
+# 显式排除受限目录（放在取消忽略之后）
+volumes/**/postgres/
+volumes/**/gitea/ssh/
+volumes/**/redis/appendonlydir/
+!volumes/**/.gitkeep
+
+.env

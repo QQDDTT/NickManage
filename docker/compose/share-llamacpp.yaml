@@ -4,16 +4,19 @@ services:
   llamacpp:
     image: ghcr.io/ggml-org/llama.cpp:server
     container_name: share-llamacpp
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=share"
+      - "nms.proxy=false"
+    env_file: .env
     restart: always
     ports:
       - "5004:8080"
     volumes:
-      - /home/nick/NickManage/mounts/share/models:/models
-    env_file:
-      - ../env/share-llamacpp.env
+      - ${MNG_HOME}/volumes/share/llamacpp:/models
     command:
       - "-m"
-      - "/models/llm/Qwen2.5-3B-Instruct-Q4_K_M.gguf"
+      - "/models/${LLM_MODEL_PATH}"
       - "--host"
       - "0.0.0.0"
       - "--port"
@@ -27,8 +30,8 @@ services:
           memory: 1536M
     oom_score_adj: -200
     networks:
-      - nick-net
+      - nms
 
 networks:
-  nick-net:
+  nms:
     external: true

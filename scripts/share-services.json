@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "NickManage share 层服务清单，供脚本读取服务与 VS Code 扩展信息",
+  "layer": "share",
+  "services": [
+    {
+      "name": "share-postgres",
+      "description": "TimescaleDB（PostgreSQL 15）关系型数据库",
+      "image": "timescale/timescaledb:latest-pg15",
+      "compose_file": "share-postgres.yaml",
+      "port": { "host": 5001, "container": 5432 },
+      "oom_score_adj": -800,
+      "memory_reservation": "256M",
+      "category": "database",
+      "vscode_extensions": [
+        {
+          "id": "cweijan.vscode-postgresql-client2",
+          "name": "Database Client",
+          "purpose": "可视化连接、查询、浏览 PostgreSQL 数据"
+        },
+        {
+          "id": "mtxr.sqltools",
+          "name": "SQLTools",
+          "purpose": "SQL 编辑与多数据库连接管理"
+        },
+        {
+          "id": "mtxr.sqltools-driver-pg",
+          "name": "SQLTools PostgreSQL Driver",
+          "purpose": "SQLTools 的 PostgreSQL 驱动"
+        }
+      ]
+    },
+    {
+      "name": "share-chromadb",
+      "description": "ChromaDB 轻量向量数据库，适合嵌入存储与语义搜索",
+      "image": "chromadb/chroma:latest",
+      "compose_file": "share-chromadb.yaml",
+      "port": { "host": 5002, "container": 8000 },
+      "oom_score_adj": -500,
+      "memory_reservation": "256M",
+      "category": "vector_database",
+      "vscode_extensions": [
+        {
+          "id": "humao.rest-client",
+          "name": "REST Client",
+          "purpose": "直接在编辑器内调用 ChromaDB HTTP API"
+        },
+        {
+          "id": "rangav.vscode-thunder-client",
+          "name": "Thunder Client",
+          "purpose": "轻量 REST/HTTP 客户端，调试 API"
+        }
+      ]
+    },
+    {
+      "name": "share-qdrant",
+      "description": "Qdrant 高性能向量检索数据库，支持过滤与分组检索",
+      "image": "qdrant/qdrant",
+      "compose_file": "share-qdrant.yaml",
+      "port": { "host": 5003, "container": 6333 },
+      "oom_score_adj": -500,
+      "memory_reservation": "256M",
+      "category": "vector_database",
+      "vscode_extensions": [
+        {
+          "id": "humao.rest-client",
+          "name": "REST Client",
+          "purpose": "调用 Qdrant REST API"
+        },
+        {
+          "id": "rangav.vscode-thunder-client",
+          "name": "Thunder Client",
+          "purpose": "图形化测试 Qdrant API 端点"
+        }
+      ]
+    },
+    {
+      "name": "share-llamacpp",
+      "description": "Llama.cpp 本地大语言模型推理，兼容 OpenAI API 格式",
+      "image": "ghcr.io/ggml-org/llama.cpp:server",
+      "compose_file": "share-llamacpp.yaml",
+      "port": { "host": 5004, "container": 8080 },
+      "oom_score_adj": -200,
+      "memory_reservation": "1536M",
+      "category": "ai_inference",
+      "vscode_extensions": [
+        {
+          "id": "humao.rest-client",
+          "name": "REST Client",
+          "purpose": "调用 /v1/chat/completions 等 OpenAI 兼容接口"
+        },
+        {
+          "id": "continue.continue",
+          "name": "Continue",
+          "purpose": "AI 编程助手，可配置本地 llama.cpp 作为后端"
+        }
+      ]
+    },
+    {
+      "name": "share-whisper",
+      "description": "Whisper 语音转文字（ASR），提供 HTTP API",
+      "image": "mioyisama/whisper-server:latest",
+      "compose_file": "share-whisper.yaml",
+      "port": { "host": 5006, "container": 8080 },
+      "oom_score_adj": -200,
+      "memory_reservation": "1G",
+      "category": "ai_speech",
+      "vscode_extensions": [
+        {
+          "id": "humao.rest-client",
+          "name": "REST Client",
+          "purpose": "上传音频文件并调用转写接口"
+        }
+      ]
+    },
+    {
+      "name": "share-vits",
+      "description": "VITS 文字转语音（TTS），支持多说话人",
+      "image": "artrajz/vits-simple-api:latest",
+      "compose_file": "share-vits.yaml",
+      "port": { "host": 5007, "container": 23456 },
+      "oom_score_adj": -500,
+      "memory_reservation": "2G",
+      "category": "ai_speech",
+      "vscode_extensions": [
+        {
+          "id": "humao.rest-client",
+          "name": "REST Client",
+          "purpose": "发送 TTS 合成请求"
+        }
+      ]
+    },
+    {
+      "name": "share-mlflow",
+      "description": "MLflow 模型实验追踪、参数记录与模型注册",
+      "image": "ghcr.io/mlflow/mlflow:latest",
+      "compose_file": "share-mlflow.yaml",
+      "port": { "host": 5008, "container": 5000 },
+      "oom_score_adj": -500,
+      "memory_reservation": "256M",
+      "category": "mlops",
+      "vscode_extensions": [
+        {
+          "id": "ms-python.python",
+          "name": "Python",
+          "purpose": "编写 MLflow 实验追踪代码"
+        },
+        {
+          "id": "ms-toolsai.jupyter",
+          "name": "Jupyter",
+          "purpose": "在 Notebook 中运行 MLflow 实验"
+        }
+      ]
+    },
+    {
+      "name": "share-embedding",
+      "description": "BGE-M3 向量嵌入服务，兼容 OpenAI Embedding API",
+      "image": "ghcr.io/ggml-org/llama.cpp:server",
+      "compose_file": "share-embedding.yaml",
+      "port": { "host": 5009, "container": 8080 },
+      "oom_score_adj": -200,
+      "memory_reservation": "512M",
+      "category": "ai_inference",
+      "vscode_extensions": [
+        {
+          "id": "humao.rest-client",
+          "name": "REST Client",
+          "purpose": "调用 /v1/embeddings 接口获取向量"
+        }
+      ]
+    }
+  ],
+  "vscode_extensions_all": [
+    "cweijan.vscode-postgresql-client2",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "humao.rest-client",
+    "rangav.vscode-thunder-client",
+    "continue.continue",
+    "ms-python.python",
+    "ms-toolsai.jupyter"
+  ]
+}

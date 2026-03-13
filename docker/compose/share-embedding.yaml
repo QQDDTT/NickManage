@@ -4,16 +4,19 @@ services:
   embedding:
     image: ghcr.io/ggml-org/llama.cpp:server
     container_name: share-embedding
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=share"
+      - "nms.proxy=false"
+    env_file: .env
     restart: always
     ports:
       - "5009:8080"
     volumes:
-      - /home/nick/NickManage/mounts/share/models:/models
-    env_file:
-      - ../env/share-embedding.env
+      - ${MNG_HOME}/volumes/share/embedding:/models
     command:
       - "-m"
-      - "/models/embedding/bge-m3-embeddings-q4_k_m.gguf"
+      - "/models/${EMBEDDING_MODEL_PATH}"
       - "--host"
       - "0.0.0.0"
       - "--port"
@@ -28,8 +31,8 @@ services:
           memory: 512M
     oom_score_adj: -200
     networks:
-      - nick-net
+      - nms
 
 networks:
-  nick-net:
+  nms:
     external: true

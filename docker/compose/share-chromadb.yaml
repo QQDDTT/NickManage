@@ -4,24 +4,27 @@ services:
   chromadb:
     image: chromadb/chroma:latest
     container_name: share-chromadb
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=share"
+      - "nms.proxy=false"
+    env_file: .env
     restart: always
     ports:
       - "5002:8000"
     environment:
-      - ALLOW_RESET=false
+      - ALLOW_RESET=${ALLOW_RESET}
       - IS_PERSISTENT=TRUE
       - PERSIST_DIRECTORY=/volumes/chroma
     volumes:
       - share_chromadb_data:/volumes/chroma
-    env_file:
-      - ../env/share-chromadb.env
     deploy:
       resources:
         reservations:
           memory: 256M
     oom_score_adj: -500
     networks:
-      - nick-net
+      - nms
 
 volumes:
   share_chromadb_data:
@@ -29,8 +32,8 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ../../volumes/share/chromadb
+      device: ${MNG_HOME}/volumes/share/chromadb
 
 networks:
-  nick-net:
+  nms:
     external: true

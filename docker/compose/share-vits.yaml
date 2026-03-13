@@ -4,20 +4,25 @@ services:
   vits:
     image: artrajz/vits-simple-api:latest
     container_name: share-vits
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=share"
+      - "nms.proxy=false"
+    env_file: .env
     restart: always
     ports:
       - "5007:23456"
     volumes:
-      - /home/nick/NickManage/mounts/share/models:/models:ro
-      - /home/nick/NickManage/mounts/share/vits/config.yaml:/app/config.yaml
+      - ${MNG_HOME}/volumes/share/models:/models:ro
+      - ${MNG_HOME}/volumes/share/vits/config.yaml:/app/config.yaml
     deploy:
       resources:
         reservations:
           memory: 2G
     oom_score_adj: -500
     networks:
-      - nick-net
+      - nms
 
 networks:
-  nick-net:
+  nms:
     external: true

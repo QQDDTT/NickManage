@@ -3,22 +3,25 @@ services:
   postgres:
     image: timescale/timescaledb:latest-pg15
     container_name: share-postgres
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=share"
+      - "nms.proxy=false"
+    env_file: .env
     restart: always
     ports:
       - "5001:5432"
     environment:
-      - POSTGRES_USER=nick
-      - POSTGRES_PASSWORD=nick_postgres_pass
-      - POSTGRES_DB=nickdb
-    env_file:
-      - ../env/share-postgres.env
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     deploy:
       resources:
         reservations:
           memory: 256M
     oom_score_adj: -800
     networks:
-      - nick-net
+      - nms
 
 volumes:
   share_postgres_data:
@@ -26,8 +29,8 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ../../volumes/share/postgres
+      device: ${MNG_HOME}/volumes/share/postgres
 
 networks:
-  nick-net:
+  nms:
     external: true

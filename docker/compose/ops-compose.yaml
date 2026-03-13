@@ -1,14 +1,45 @@
 networks:
-  nick-net:
-    name: nick-net
+  nms:
+    name: nms
     driver: bridge
 
 services:
 
+  ops-docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: ops-docker-socket-proxy
+    restart: unless-stopped
+    labels:
+      - "nms.collect=false"
+      - "nms.layer=ops"
+      - "nms.proxy=false"
+    mem_limit: 32m
+    oom_score_adj: -999
+    environment:
+      # 仅开放 Traefik / Vector / Monitor 所需的只读权限
+      - CONTAINERS=1
+      - SERVICES=0
+      - TASKS=0
+      - NETWORKS=0
+      - VOLUMES=0
+      - INFO=1
+      - EVENTS=1
+      - PING=1
+      - POST=0        # 禁止写操作
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - nms
+
   ops-traefik:
     image: traefik:v2.11
     container_name: ops-traefik
+    env_file: .env
     restart: unless-stopped
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=ops"
+      - "nms.proxy=false"
     mem_limit: 50m
     oom_score_adj: -999
     ports:
@@ -16,33 +47,39 @@ services:
       - "443:443"
       - "3000:8080"
     environment:
-      - DOCKER_API_VERSION=1.41
+      - DOCKER_HOST=tcp://ops-docker-socket-proxy:2375
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ../../mounts/ops/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
-      - ../../mounts/ops/traefik/dynamic:/etc/traefik/dynamic
-      - ../../mounts/ops/traefik/acme.json:/etc/traefik/acme.json
+      - ${MNG_HOME}/volumes/ops/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ${MNG_HOME}/volumes/ops/traefik-dynamic:/etc/traefik/dynamic
+      - ${MNG_HOME}/volumes/ops/acme.json:/etc/traefik/acme.json
     networks:
-      - nick-net
+      - nms
+    depends_on:
+      - ops-docker-socket-proxy
 
   ops-gitea:
     image: gitea/gitea:1.21.0
     container_name: ops-gitea
+    env_file: .env
     restart: unless-stopped
-    mem_limit: 150m
+    mem_limit: 256m
     oom_score_adj: -999
     ports:
       - "3022:22"          # SSH 直通
-    env_file:
-      - ../env/ops.env
     environment:
       - USER_UID=1000
       - USER_GID=1000
+      - GITEA__database__PASSWD=${GITEA__database__PASSWD}
+      - GITEA__security__SECRET_KEY=${GITEA__security__SECRET_KEY}
+      - GITEA__oauth2__JWT_SECRET=${GITEA__oauth2__JWT_SECRET}
     volumes:
-      - ../../mounts/share/gitea:/data
+      - ${MNG_HOME}/volumes/ops/gitea:/data
     networks:
-      - nick-net
+      - nms
     labels:
+      - "nms.collect=true"
+      - "nms.layer=ops"
+      - "nms.proxy=true"
       - "traefik.enable=true"
       - "traefik.http.routers.ops-gitea.rule=Host(`gitea.local`)"
       - "traefik.http.routers.ops-gitea.entrypoints=websecure"
@@ -50,26 +87,123 @@ services:
       - "traefik.http.routers.ops-gitea.tls.certresolver=letsencrypt"
       - "traefik.http.services.ops-gitea.loadbalancer.server.port=3000"
 
+  ops-redis:
+    image: redis:7-alpine
+    container_name: ops-redis
+    env_file: .env
+    restart: always
+    ports:
+      - "5000:6379"
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - "${REDIS_PASSWORD}"
+    volumes:
+      - ops_redis_data:/data
+    deploy:
+      resources:
+        reservations:
+          memory: 64M
+    oom_score_adj: -999
+    networks:
+      - nms
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=ops"
+      - "nms.proxy=false"
+
+  ops-redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: ops-redis-exporter
+    restart: unless-stopped
+    labels:
+      - "nms.collect=false"
+      - "nms.layer=ops"
+      - "nms.proxy=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.ops-redis-exporter.rule=Host(`redis-exporter.local`)"
+      - "traefik.http.routers.ops-redis-exporter.entrypoints=websecure"
+      - "traefik.http.routers.ops-redis-exporter.tls=true"
+      - "traefik.http.services.ops-redis-exporter.loadbalancer.server.port=9121"
+    mem_limit: 32m
+    oom_score_adj: -999
+    environment:
+      - REDIS_ADDR=redis://ops-redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command:
+      - "-check-keys=logs:priority:high,logs:priority:normal"
+    networks:
+      - nms
+    depends_on:
+      - ops-redis
+
   ops-loki:
     image: grafana/loki:3.0.0
     container_name: ops-loki
+    env_file: .env
     restart: unless-stopped
+    labels:
+      - "nms.collect=true"
+      - "nms.layer=ops"
+      - "nms.proxy=false"
     mem_limit: 100m
     oom_score_adj: -999
     volumes:
-      - /home/nick/.logs/loki:/loki
+      - ${MNG_HOME}/volumes/ops/loki.yaml:/etc/loki/local-config.yaml:ro
+      - ${LOG_HOME}/loki:/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
-      - nick-net
+      - nms
 
   ops-vector:
     image: timberio/vector:0.38.0-alpine
     container_name: ops-vector
+    env_file: .env
     restart: unless-stopped
+    labels:
+      - "nms.collect=false"
+      - "nms.layer=ops"
+      - "nms.proxy=false"
     mem_limit: 50m
     oom_score_adj: -999
+    environment:
+      - DOCKER_HOST=tcp://ops-docker-socket-proxy:2375
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /home/nick/.logs/vector:/var/lib/vector
+      - ${MNG_HOME}/volumes/ops/vector.yaml:/etc/vector/vector.yaml:ro
+      - ${LOG_HOME}/vector:/var/lib/vector
+    command: ["--watch-config"]
     networks:
-      - nick-net
+      - nms
+    depends_on:
+      - ops-docker-socket-proxy
+
+  ops-monitor:
+    image: alpine:latest
+    container_name: ops-monitor
+    restart: unless-stopped
+    labels:
+      - "nms.collect=false"
+      - "nms.layer=ops"
+      - "nms.proxy=false"
+    environment:
+      - DOCKER_HOST=tcp://ops-docker-socket-proxy:2375
+    volumes:
+      - ${MNG_HOME}/volumes/ops/monitor.sh:/app/monitor.sh:ro
+    working_dir: /app
+    command: >
+      sh -c "apk add --no-cache curl && sh ./monitor.sh"
+    networks:
+      - nms
+    depends_on:
+      - ops-traefik
+      - ops-docker-socket-proxy
+
+volumes:
+  ops_redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${MNG_HOME}/volumes/ops/redis
