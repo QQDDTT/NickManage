@@ -8,10 +8,13 @@ link/
 
 volumes/**
 !volumes/**/
-# 显式排除受限目录（放在取消忽略之后）
-volumes/**/postgres/
-volumes/**/gitea/ssh/
-volumes/**/redis/appendonlydir/
+# 显式排除受限目录（使用通配符覆盖所有层级，防止工具扫描子模块内部）
+**/postgres/
+**/gitea/ssh/
+**/redis/appendonlydir/
+
+# 强制忽略 volumes 深度路径，防止递归扫描进入子项目子目录
+volumes/*/*/*/**
 !volumes/**/.gitkeep
 
 .env

@@ -25,7 +25,9 @@ services:
       - "2"
     deploy:
       resources:
-        # 降低内存预留至 1.5G
+        limits:
+          cpus: '4.0'
+          memory: 4096M
         reservations:
           memory: 1536M
     oom_score_adj: -200

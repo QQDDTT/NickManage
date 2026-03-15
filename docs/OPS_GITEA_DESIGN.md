@@ -27,7 +27,7 @@
 graph TD
     A[开始创建项目] --> B{Gitea 中是否存在仓库?}
     B -- 否 --> C[API 创建 Gitea 仓库]
-    C --> D[本地 WorkSpace 目录初始化 Git]
+    C --> D[本地 workspaces 目录初始化 Git]
     B -- 是 --> D
     D --> E[关联 Gitea 远程地址]
     E --> F[推送本地代码到 master 分支]

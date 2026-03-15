@@ -1,6 +1,6 @@
 services:
   dev-JavaTeachingSolution:
-    image: dev-image:latest
+    image: ubuntu:24.04
     container_name: dev-JavaTeachingSolution
     hostname: dev-JavaTeachingSolution
     labels:
@@ -32,11 +32,11 @@ services:
     environment:
       - PROJECT_NAME=JavaTeachingSolution
       - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/vscode/.local/bin
-      - ANTIGRAVITY_LOG_LEVEL=debug
       - GOMAXPROCS=2
       - NODE_OPTIONS=--max-old-space-size=4096
       - CUDA_VISIBLE_DEVICES=-1
       - NO_GPU=1
+      - DOCKER_HOST=tcp://ops-docker-socket-proxy:2375
 
     # --- 4. 目录挂载 (纯净云端化) ---
     volumes:
@@ -44,16 +44,19 @@ services:
 
       - ${JAVA_M2}:/home/vscode/.m2
       - ${NODE_NPM}:/home/vscode/.npm
-      - ${USER_HOME}/.gemini:/home/vscode/.gemini
-      - ${MNG_DIR}/volumes/share/git/gitconfig:/home/vscode/.gitconfig:ro
-      - ${MNG_DIR}/volumes/share/git/.git-credentials:/home/vscode/.git-credentials:ro
+      - ${MNG_HOME}/volumes/share/git/gitconfig:/home/vscode/.gitconfig:ro
+      - ${MNG_HOME}/volumes/share/git/.git-credentials:/home/vscode/.git-credentials:ro
+      - ${WORK_SPACE_HOME}/JavaTeachingSolution:/workspaces/JavaTeachingSolution
     
     # --- 5. 自动化启动脚本 (权限与就绪) ---
-    entrypoint: >
-      /bin/sh -c "
-      chown -R vscode:vscode /workspaces/$$PROJECT_NAME 2>/dev/null;
-      exec tail -f /dev/null
-      "
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo 'vscode ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/nopasswd-vscode
+        chown vscode:vscode /home/vscode/.cache
+        chown -R vscode:vscode /workspaces/$$PROJECT_NAME 2>/dev/null
+        exec tail -f /dev/null
 
     networks:
       - nms

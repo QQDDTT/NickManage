@@ -20,12 +20,12 @@
 │   ├── applications/      # 系统应用程序快捷方式 (.desktop) 链接
 │   ├── env/                 # 宿主机 shell 环境变量与全局规则链接
 │   └── github/              # Git 配置与 SSH 密钥公钥链接
-├── mounts/                  # 基于 Bind Mount 的容器挂载点
-│   ├── ops/                 # 底座层服务的持久化数据
-│   └── share/               # 共享层服务的持久化数据
-├── volumes/                 # 基于 Named Volume 的容器卷声明
-│   ├── ops/                 # 底座层服务的持久化数据 (如 Gitea)
-│   └── share/               # 共享层服务的持久化数据
+├── mounts/                  # 基于 Bind Mount 的容器挂载点 (静态资源/模型)
+│   ├── ops/                 # 底座层服务的配置文件
+│   └── share/               # 共享层服务的公共模型/资源
+├── volumes/                 # 基于 Named Volume 或持久化路径的容器卷 (数据)
+│   ├── ops/                 # 底座层服务的持久化数据库 (如 Gitea, Redis)
+│   └── share/               # 共享层服务的持久化数据库 (如 Postgres)
 ├── .project                 # 项目标识文件
 └── .env                     # 工程级全局环境变量
 ```

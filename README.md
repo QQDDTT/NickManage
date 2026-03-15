@@ -12,9 +12,9 @@
 
 | 层级 | 容器名前缀 | 端口段 | 内存限制 | OOM 优先级 | 职责 |
 |---|---|---|---|---|---|
-| **底座层** | `ops-` | 3000-3999 | 共计 ≤ 500MB | 最高 (最后杀) | Traefik, Gitea, 日志栈 |
+| **底座层** | `ops-` | 3000-3999 | ≤ 1GB | 最高 (最后杀) | Traefik, Gitea, 日志栈 |
 | **共享层** | `share-` | 5000-6999 | 软限制 | 次高 | 数据库, Redis, AI 模型服务 |
-| **开发层** | `dev-` | 8000-9999 | ≤ 2GB | 最低 (优先杀) | 各项目 devcontainer 环境 |
+| **开发层** | `dev-` | 8000-9999 | ≤ 4GB | 最低 (优先杀) | 各项目 devcontainer 环境 |
 | **业务层** | `app-` | 10000+ | 继承开发层 | 中 | 生产/测试业务容器 |
 
 ---
@@ -34,7 +34,8 @@ graph TD
     end
     
     subgraph Shared_Services
-        Gitea -- DooD --> DockerHost[(Docker Socket)]
+        Gitea -- Proxy --> Proxy[ops-docker-socket-proxy]
+        Proxy -- Socket --> DockerHost[(Docker Socket)]
         Dev -- Internal --> Redis[share-redis]
         App -- Internal --> DB[share-postgres]
     end
@@ -50,7 +51,7 @@ graph TD
 - **外部接入**：通过 `mounts/ops/traefik/dynamic` 目录管理非 Docker 目标（如本地宿主机服务或外网 IP）。
 
 ### 3.2 源码托管与 CI/CD (Gitea)
-- **DooD (Docker-outside-of-Docker)**：Gitea Actions Runner 挂载宿主机 Docker Socket。这种模式性能最高，且方便利用宿主机的镜像缓存。
+- **DooD 代理**：Gitea Actions Runner 通过 `ops-docker-socket-proxy` 访问宿主机 Docker API。这种模式兼顾性能与安全性。
 - **流水线规范**：
   - 流水线定义：`.gitea/workflows/*.yaml`。
   - 交付物：所有流程最终必须构建为 Docker 镜像并推送至 Gitea 内置镜像仓库。
@@ -84,6 +85,6 @@ sequenceDiagram
 ---
 
 ## 5. 开发层 (dev) 规范
-- **Workspace 映射**：宿主机 `/home/nick/WorkSpace/<项目>` 映射到容器内 `/workspace/<项目>`。
+- **Workspace 映射**：宿主机 `/home/nick/workspaces/<项目>` 映射到容器内 `/workspace/<项目>`。
 - **配置同步**：所有 devcontainer 统一种子挂载 `/etc/localtime` (时间同步) 和 `bash_history` (历史持久化)。
 - **单一运行原则**：受内存限制，同一时刻仅允许运行一个 `dev-*` 容器。

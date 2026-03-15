@@ -13,9 +13,9 @@
 
 | 层级 | 前缀 | 用途 | 内存限制 |
 |---|---|---|---|
-| **底座层** | `ops-` | Traefik, Gitea, Loki, Vector | 总计 ≤ 500MB |
+| **底座层** | `ops-` | Traefik, Gitea, Loki, Vector | 总计 ≤ 1GB |
 | **共享层** | `share-` | Postgres, Redis, Embedding | 无硬限制 |
-| **开发层** | `dev-` | 各项目 devcontainer | 单容器 ≤ 2GB |
+| **开发层** | `dev-` | 各项目 devcontainer | 单容器 ≤ 4GB |
 | **业务层** | `app-` | 生产服务 | 继承开发层 |
 
 ---
@@ -48,7 +48,7 @@ bash ~/NickManage/Antigravity-Manage/open_workspace.sh
 所有 `devcontainer` 默认具备以下挂载：
 - `/etc/localtime`: 宿主机时间同步 (只读)
 - `~/.ssh`: SSH 密钥 (只读)
-- `~/.gitconfig`: Git 配置 (只读)
+- `volumes/share/git/gitconfig`: Git 配置 (只读)
 - `/logs`: 项目专属日志目录
 
 ---
@@ -65,8 +65,8 @@ bash ~/NickManage/Antigravity-Manage/open_workspace.sh
 ### 4.2 交互逻辑 (The "How-to")
 
 #### A. 与 Docker 的交互 (DooD)
-- **模式**：采用 **Docker-outside-of-Docker (DooD)**。
-- **实现**：通过挂载 `/var/run/docker.sock`，容器内的 `docker` 命令直接操作宿主机的 Docker Daemon。
+- **模式**：采用 **Docker-outside-of-Docker (DooD)** 代理模式。
+- **实现**：**禁止**直接挂载 socket。通过 `ops-docker-socket-proxy` 提供的受控 API。
 - **职责**：在 `devcontainer` 内可以构建业务镜像 (`docker build`)、启动业务层容器 (`docker compose up`)。
 
 #### B. 与 Traefik 的交互 (路由接入)

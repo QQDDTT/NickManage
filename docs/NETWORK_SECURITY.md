@@ -91,11 +91,11 @@ Vector 依据此标签路由日志到不同优先级队列（Redis `logs:priorit
 
 | 容器 | 访问方式 | 允许的权限 |
 |---|---|---|
-| `ops-docker-socket-proxy` | 直接挂载（只读） | 代理层，控制下游权限 |
-| `ops-traefik` | `tcp://ops-docker-socket-proxy:2375` | `CONTAINERS`, `EVENTS`, `PING` |
-| `ops-vector` | `tcp://ops-docker-socket-proxy:2375` | `CONTAINERS`, `EVENTS`, `PING` |
+| `ops-docker-socket-proxy` | 直接挂载 | 代理层，控制下游权限 |
+| `ops-traefik` / `ops-vector` | `tcp://ops-docker-socket-proxy:2375` | `CONTAINERS`, `EVENTS`, `PING` |
 | `ops-monitor` | `tcp://ops-docker-socket-proxy:2375` | `CONTAINERS`, `INFO`, `EVENTS` |
-| 其他所有容器 | **禁止访问** | — |
+| `dev-*` (开发层项目) | `tcp://ops-docker-socket-proxy:2375` | `CONTAINERS`, `IMAGES`, `NETWORKS`, `POST` (受控写) |
+| 其他业务容器 (`app-*`) | **禁止访问** | — |
 
 `docker-socket-proxy` 环境变量权限说明：
 
@@ -105,10 +105,11 @@ environment:
   - INFO=1         # 允许查询系统信息
   - EVENTS=1       # 允许监听 Docker 事件流
   - PING=1         # 允许健康检查
-  - POST=0         # 禁止所有写操作（创建/删除/启停容器）
+  - POST=1         # 允许受控写操作（支持开发层部署业务服务）
+  - IMAGES=1       # 允许镜像管理（支持开发层拉取镜像）
+  - NETWORKS=1     # 允许网络管理（支持开发层容器互联）
   - SERVICES=0     # 禁止 Swarm 服务操作
   - TASKS=0        # 禁止 Swarm 任务操作
-  - NETWORKS=0     # 禁止网络管理操作
   - VOLUMES=0      # 禁止卷管理操作
 ```
 
@@ -132,7 +133,8 @@ environment:
 |---|---|---|
 | `app-*` / `dev-*` | `share-*` | ✅ 允许（共享服务的设计目的） |
 | `app-*` / `dev-*` | `ops-*` | ⚠️ 仅允许访问 `ops-redis`（消息队列）和 `ops-gitea`（代码托管） |
-| 任意容器 | `ops-docker-socket-proxy` | ❌ 禁止（不应出现在服务 Compose 中） |
+| `app-*` | `ops-docker-socket-proxy` | ❌ 禁止（业务服务无需访问） |
+| `dev-*` | `ops-docker-socket-proxy` | ✅ 允许（通过 DOCKER_HOST 进行受控部署操作） |
 | 任意容器 | `ops-loki` / `ops-vector` | ❌ 禁止直接写入（由 Vector 自动采集） |
 
 ### 4.4 敏感信息管控

@@ -26,9 +26,16 @@ services:
       - "2"
     deploy:
       resources:
-        # 预期占用 512MB
+        limits:
+          cpus: '2.0'
+          memory: 1024M
         reservations:
           memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     oom_score_adj: -200
     networks:
       - nms

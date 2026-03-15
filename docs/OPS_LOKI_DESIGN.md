@@ -33,7 +33,7 @@ Loki 通过标签进行分片存储。核心索引维度包括：
 
 - **路径**：`${MNG_HOME}/volumes/ops/loki`。
 - **配置**：采用单节点模式（Filesystem），适用于工作站环境。
-- **保留策略 (Retention)**：默认保留 7 天日志，超出部分自动滚动清理。
+- **保留策略 (Retention)**：`dev` 层日志默认保留 1 天，其他层级详见 `OPS_DESIGN.md`。
 
 ## 4. 日志查看方式 (VSCode 插件)
 

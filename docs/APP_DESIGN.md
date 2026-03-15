@@ -7,7 +7,7 @@
 应用层的核心特征是**高度解耦**。每个业务项目拥有独立的服务定义，不依赖全局统一的 Compose 文件。
 
 ### 1.1 目录结构与配置归属
-- **配置位置**: 每个项目的 Docker 配置均存放于各自源码仓库的 `docker/` 目录下（例如：`WorkSpace/<Project>/docker/docker-compose.yaml`）。
+- **配置位置**: 每个项目的 Docker 配置均存放于各自源码仓库的 `docker/` 目录下（例如：`workspaces/<Project>/docker/docker-compose.yaml`）。
 - **环境隔离**: 业务容器的生命周期（启动、停止、重启）由对应项目的开发环境或部署流程全权负责，不干扰系统其他部分。
 
 ### 1.2 与开发层的关系
@@ -25,7 +25,7 @@
 ### 2.2 服务发现与反向代理 (Traefik)
 - **接入方式**: 业务应用不需要在 Compose 中直接暴露宿主机端口。
 - **Traefik 标签**: 通过在 `docker-compose.yaml` 中添加特定的 `labels`，由底座层的 Traefik 自动发现并生成路由规则。
-- **端口分配**: 业务服务端口原则上从 `10000` 开始起始分配，避免与底座层 (80-9000) 和共享层 (5000-6000) 冲突。
+- **端口分配**: 业务服务端口原则上从 `10000` 开始起始分配，避免与底座层 (3000-3999) 和共享层 (5000-6999) 冲突。
 
 ### 2.3 持久化路径 (Volumes)
 - **数据路径**: 业务应用的持久化数据应尽可能挂载至项目自身的 `mounts/` 结构中，或者使用命名卷（Named Volumes）。
@@ -35,7 +35,7 @@
 
 ```mermaid
 graph TD
-    subgraph "App Layer (WorkSpace/Project)"
+    subgraph "App Layer (workspaces/Project)"
         A[Business Service]
     end
     subgraph "Ops Layer (Core)"

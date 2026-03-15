@@ -20,12 +20,13 @@ services:
       - CONTAINERS=1
       - SERVICES=0
       - TASKS=0
-      - NETWORKS=0
+      - NETWORKS=1
       - VOLUMES=0
+      - IMAGES=1
       - INFO=1
       - EVENTS=1
       - PING=1
-      - POST=0        # 禁止写操作
+      - POST=1        # 允许写操作
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -40,12 +41,12 @@ services:
       - "nms.collect=true"
       - "nms.layer=ops"
       - "nms.proxy=false"
-    mem_limit: 50m
+    mem_limit: 100m
     oom_score_adj: -999
     ports:
       - "80:80"
       - "443:443"
-      - "3000:8080"
+      - "3080:8080"
     environment:
       - DOCKER_HOST=tcp://ops-docker-socket-proxy:2375
     volumes:
@@ -62,7 +63,7 @@ services:
     container_name: ops-gitea
     env_file: .env
     restart: unless-stopped
-    mem_limit: 256m
+    mem_limit: 512m
     oom_score_adj: -999
     ports:
       - "3022:22"          # SSH 直通
@@ -76,6 +77,19 @@ services:
       - ${MNG_HOME}/volumes/ops/gitea:/data
     networks:
       - nms
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 1m
     labels:
       - "nms.collect=true"
       - "nms.layer=ops"
@@ -148,7 +162,7 @@ services:
       - "nms.collect=true"
       - "nms.layer=ops"
       - "nms.proxy=false"
-    mem_limit: 100m
+    mem_limit: 200m
     oom_score_adj: -999
     volumes:
       - ${MNG_HOME}/volumes/ops/loki.yaml:/etc/loki/local-config.yaml:ro
@@ -166,7 +180,7 @@ services:
       - "nms.collect=false"
       - "nms.layer=ops"
       - "nms.proxy=false"
-    mem_limit: 50m
+    mem_limit: 100m
     oom_score_adj: -999
     environment:
       - DOCKER_HOST=tcp://ops-docker-socket-proxy:2375
@@ -184,7 +198,7 @@ services:
     container_name: ops-monitor
     restart: unless-stopped
     labels:
-      - "nms.collect=false"
+      - "nms.collect=true"
       - "nms.layer=ops"
       - "nms.proxy=false"
     environment:

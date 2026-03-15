@@ -8,7 +8,7 @@
 
 *   **核心功能**：包含反向代理与统一负载均衡 (Traefik)、代码托管与本地 CI/CD 集成 (Gitea)、高速缓存与状态存储 (Redis)、日志中心 (Loki) 及全量日志采集 (Vector)。
 *   **路由管理**：所有外部 HTTP/HTTPS 流量均由底座层统一路由，其他各层服务禁止直接对外披露端口。
-*   **资源策略**：具备最高的 OOM 优先级（最后被终止），全层内存硬限制控制在 500 MB 以内，确保基础环境的绝对稳定性。
+*   **资源策略**：具备最高的 OOM 优先级（最后被终止），全层内存硬限制控制在 1GB 以内，确保基础环境的绝对稳定性。
 
 ## 2. 共享层 (share)
 
@@ -24,7 +24,7 @@
 
 *   **核心功能**：封装各语言运行时及工具链，作为代码编写与调试的隔离环境。
 *   **运行规则**：原则上同一时刻仅允许运行一个开发层容器，以优化工作站资源分配。
-*   **资源策略**：单容器内存硬限制为 4 GB，具备最低的 OOM 优先级，在内存极其紧张时优先释放。
+*   **资源策略**：单容器内存硬限制为 4GB，具备最低的 OOM 优先级，在内存极其紧张时优先释放。
 
 ## 4. 业务层 (app)
 
@@ -49,13 +49,13 @@
 - **Compose (服务级) 挂载**:
     - 仅限必要的 runtime 配置文件（只读）。
 - **devcontainer.json (IDE 级) 挂载**:
-    - VS Code 运行环境: `vscode-server/extension`, `vscode-server/bin`, `/tmp/vscode-ipc-*`。
-    - Antigravity 全局配置: `${USER_HOME}/.gemini`, `${USER_HOME}/.antigravity`。
-    - Antigravity 项目数据: `antigravity/index`, `antigravity/cache`, `antigravity/config.yaml`。
+    - 无需手动挂载 VS Code Server 与 Antigravity 环境（已内置于镜像中）。
+    - 仅限必要的 runtime 配置文件。
+    - Antigravity 项目数据: `antigravity/index`, `antigravity/cache`, `antigravity/config.yaml` (统一存放于 volumes)。
 
 ### 5.4 挂载路径分配原则
-- **底座层 (ops) 与 共享层 (share)**: 使用 `yaml` 文件构筑，其持久化挂载必须位于项目根目录的 `volumes/ops/` 和 `volumes/share/` 文件夹内。
-- **开发层 (dev)**: 各类开发环境的核心工作区及配置文件（如 `.devcontainer`、`vscode-server`）统一位于 `volumes/dev/<项目名>/` 目录下。针对源码工作区，采取本地挂载与 Gitea 云端拉取相结合的模式。
+- **底座层 (ops) 与 共享层 (share)**: 使用 `yaml` 文件构筑，其持久化数据必须使用命名卷或存放在项目根目录的 `volumes/ops/` 和 `volumes/share/` 文件夹内。
+- **开发层 (dev)**: 各类开发环境的核心工作区位于 `/home/nick/workspaces/<项目名>/` 目录下。针对源码工作区，采取本地挂载与 Gitea 云端拉取相结合的模式。语言包缓存统一位于 `volumes/dev/` 目录下。
 
 ## 6. 网络命名与标签设计
 

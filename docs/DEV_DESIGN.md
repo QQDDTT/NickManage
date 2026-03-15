@@ -10,20 +10,19 @@
 由 `docker/compose/dev-*.yaml` 定义。其职责是定义容器运行时环境。
 - **配置职责**:
     - **位置变更**: 所有开发环境 Compose 文件均存放在 `docker/compose/` 目录下。
-    - **本地挂载 (物理存储)**: 项目工程源码存放在 `volumes/dev/<项目名>/workspaces/`。所有源码、配置与插件数据均持久化在此目录下，确保环境重建后的连续性。
+    - **本地挂载 (物理存储)**: 项目工程源码统一存放在 `/home/nick/workspaces/<项目名>`。所有源码、配置与插件数据均持久化在此目录下，确保环境重建后的连续性。
     - **环境隔离**: **必须** 使用 `env_file` 指向根目录 `.env`。严禁硬编码路径。
     - **权限保障**: 保持 `privileged: true` 以兼容特定内核环境。
     - **资源保障**: 固定 **4096M (4GB)** 内存限制，优化 `ulimits`。
     - **共享资源**:
-        - `${DEV_SHARE_HOME}`: 挂载常用的语言包管理缓存。
-        - `${DEV_CACHE_HOME}`: 集中挂载多种开发语言（Java, Python, Go 等）的安装工具与运行时环境。
-    - **全局配置**: 挂载 `${USER_HOME}/.gemini` 及 `${USER_HOME}/.antigravity` 以支持 AI 工具集。
+        - `${DEV_CACHE_HOME}`: 集中挂载多种开发语言（Java, Python, Go 等）的运行时环境与依赖缓存（位于 `volumes/dev/`）。
+    - **全局配置**: 无需手动挂载 `${USER_HOME}/.gemini` 等配置，系统已内置集成。
     - **无宿主机身份依赖**: 移除所有与宿主机相关的 `.gitconfig` 或 `.ssh` 挂载，统一由 Gitea 代理身份认证。
 
 ### 1.2 IDE 增强层 (devcontainer.json)
 由 `docker/devcontainer/devcontainer-*.json` 集中定义。其职责是配置编辑器行为。
-- **集中管理**: 各项目的 Dev Container 配置统一存放于 `docker/devcontainer/`，并且通过软链接至项目的工作区目录内（`volumes/dev/<项目名>/workspaces/<项目名>/.devcontainer`），以适配 VS Code 扫描要求。
-- **特定挂载**: 须在 `devcontainer.json` 中配置项目工作区的 `workspaceMount` 及 `vscode-server` 相关插件的数据挂载，以加速加载。
+- **集中管理**: 各项目的 Dev Container 配置统一存放于 `docker/devcontainer/`，并且通过软链接至项目的工作区目录内（`/home/nick/workspaces/<项目名>/.devcontainer`），以适配 VS Code 扫描要求。
+- **特定挂载**: 须在 `devcontainer.json` 中配置项目工作区的 `workspaceMount`。由于镜像内置 Antigravity，无需手动挂载 IDE 服务端数据。
 - **外部代理**: 引用 `../compose/dev-*.yaml` 作为基础设施定义。
 
 ## 2. 云开发代理机制 (Gitea)
@@ -44,8 +43,20 @@
 4. **状态锁定**: 标记引导完成，后续启动将直接进入开发状态。
 
 ### 2.2 容器能力隔离
-- **取消 Docker 挂载**: 移除 `/var/run/docker.sock` 挂载，防止容器逃逸并遵循云平台安全规范。
-- **DooD 方案替代**: 后续如需容器内操作镜像，将采用专门的构建服务或 Sidecar 模式。
+- **取消直接 Socket 挂载**: 严禁在开发容器中直接挂载宿主机的 `/var/run/docker.sock`，以消除容器逃逸和非法提权风险。
+- **DooD (Docker-outside-of-Docker) 代理方案**: 开发容器通过 `nms` 网络访问 `ops-docker-socket-proxy`。所有针对 Docker Daemon 的操作必须经过此代理。
+
+### 2.4 App 层服务自动化部署
+开发容器通过代理服务实现对业务应用（App 层）的透明管理与部署：
+
+1.  **通信协议**: 开发容器内部配置环境变量 `DOCKER_HOST=tcp://ops-docker-socket-proxy:2375`。
+2.  **写操作授权**: `ops-docker-socket-proxy` 配置为允许 `POST` 请求，从而支持开发环境执行 `docker compose up`、`docker build` 等写操作。
+3.  **必备组件**: 开发层镜像或 `devcontainer.json` 必须预装 `docker-cli` (或 `docker.io`) 及 `docker-compose-v2` 插件，否则无法发起 API 调用。
+4.  **部署流程**:
+    - 开发者在 VS Code 终端执行部署指令。
+    - 指令经由 `DOCKER_HOST` 转发至底座层的代理服务。
+    - 代理服务在安全过滤后将请求传递给宿主机 Docker 守护进程。
+    - 业务容器直接运行在宿主机网络空间，并受底座层监控与路由系统的管理。
 
 ## 3. 开发层管理规则
 1. **集中化配置**: 严禁在项目源码目录内存储任何环境配置文件（如 `.devcontainer` 文件夹）。

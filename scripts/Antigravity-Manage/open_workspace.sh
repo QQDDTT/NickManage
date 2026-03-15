@@ -8,7 +8,7 @@ BLUE='\033[0;34m'
 RESET='\033[0m'
 
 # 设置工作目录路径
-WORKSPACE_DIR="/home/nick/WorkSpace"
+WORKSPACE_DIR="/home/nick/workspaces"
 
 # 加载 LOG_HOME
 LOG_HOME="${LOG_HOME:-/home/nick/.logs}"
@@ -25,7 +25,7 @@ fi
 
 while true; do
     clear
-    echo -e "${BLUE}以下是 /home/nick/WorkSpace 下的所有项目文件夹：${RESET}"
+    echo -e "${BLUE}以下是 /home/nick/workspaces 下的所有项目文件夹：${RESET}"
     folders=("$WORKSPACE_DIR"/*/)
     counter=1
     for folder in "${folders[@]}"; do

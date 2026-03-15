@@ -28,7 +28,7 @@
 共享层遵循严格的挂载路径分配原则，以区分“持久化数据”与“模型/资源文件”。
 
 ### 2.1 持久化数据 (volumes/share/)
-根据架构管理规则，所有使用 `yaml` 构筑的数据库及状态化服务，其数据必须存放于 `volumes/`：
+根据架构管理规则，所有使用 `yaml` 构筑的数据库及状态化服务，其持久化数据必须使用命名卷或存放在 `volumes/`：
 - `${MNG_HOME}/volumes/share/postgres`: 数据库文件。
 - `${MNG_HOME}/volumes/share/chromadb`: 向量索引与元数据。
 - `${MNG_HOME}/volumes/share/mlflow`: 实验记录与 Artifacts。

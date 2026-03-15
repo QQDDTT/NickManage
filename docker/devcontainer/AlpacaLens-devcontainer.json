@@ -7,6 +7,14 @@
   "workspaceFolder": "/workspaces/AlpacaLens",
   "remoteUser": "vscode",
   "features": {
+    "ghcr.io/devcontainers/features/common-utils:1": {
+      "installZsh": true,
+      "configureZshOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "userUid": "1000",
+      "userGid": "1000"
+    },
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
       "installHelm": true,
@@ -28,14 +36,11 @@
     "GIT_USER_NAME": "${localEnv:GITEA_USER_NAME}",
     "GIT_USER_EMAIL": "${localEnv:GITEA_USER_EMAIL}"
   },
-  "postCreateCommand": "echo '正在准备工作空间...' && mkdir -p ${containerWorkspaceFolder} && git config --global --add safe.directory ${containerWorkspaceFolder} && git config --global user.name \\\"${GIT_USER_NAME}\\\" && git config --global user.email \\\"${GIT_USER_EMAIL}\\\" && cd ${containerWorkspaceFolder} && [ -d .git ] || (git init . && git remote add origin http://token:${GITEA_TOKEN}@ops-gitea:3000/nick/${PROJECT_NAME}.git && git fetch origin && git checkout -f master || true)",
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode && sudo apt-get update && sudo apt-get install -y curl wget git ca-certificates sudo libatomic1 libgbm1 libasound2t64 libnss3 libx11-xcb1 libxcb-dri3-0 lsb-release libsecret-1-0 libgtk-3-0 libxss1 libxkbfile1 docker.io docker-compose-v2 && echo '正在准备工作空间...' && mkdir -p ${containerWorkspaceFolder} && git config --global --add safe.directory ${containerWorkspaceFolder} && git config --global user.name \"${GIT_USER_NAME}\" && git config --global user.email \"${GIT_USER_EMAIL}\" && cd ${containerWorkspaceFolder} && [ -d .git ] || (git init . && git remote add origin http://token:${GITEA_TOKEN}@ops-gitea:3000/nick/${PROJECT_NAME}.git && git fetch origin && git checkout -f master || true)",
   "postStartCommand": "echo '检查通讯状态...' && (curl -sSf http://ops-gitea:3000 > /dev/null && echo 'Gitea: OK' || echo 'Gitea: FAIL')",
   "mounts": [
-    "source=/home/nick/NickManage/volumes/dev/AlpacaLens/vscode-server,target=/home/vscode/.vscode-server,type=bind",
-    "source=/home/nick/.antigravity,target=/home/vscode/.antigravity,type=bind",
-    "source=/home/nick/.gemini,target=/home/vscode/.gemini,type=bind"
-    ,"source=${MNG_DIR}/volumes/share/git/gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly=true"
-    ,"source=${MNG_DIR}/volumes/share/git/.git-credentials,target=/home/vscode/.git-credentials,type=bind,readonly=true"
+    "source=${MNG_HOME}/volumes/share/git/gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly=true",
+    "source=${MNG_HOME}/volumes/share/git/.git-credentials,target=/home/vscode/.git-credentials,type=bind,readonly=true"
   ],
   "customizations": {
     "vscode": {

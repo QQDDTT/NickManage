@@ -18,7 +18,7 @@ fi
 
 # 2. 定位配置文件 (绕过 IDE 路径限制)
 # 使用工作区内的软链接 (文件名固定为 devcontainer.json)，以满足 IDE 对配置文件的命名要求
-DEVCONTAINER_JSON="$MNG_DIR/volumes/dev/$PROJECT_NAME/workspaces/$PROJECT_NAME/.devcontainer/devcontainer.json"
+DEVCONTAINER_JSON="/home/nick/workspaces/$PROJECT_NAME/.devcontainer/devcontainer.json"
 
 if [ ! -f "$DEVCONTAINER_JSON" ]; then
     echo "错误：未找到项目 \"$PROJECT_NAME\" 的工作区配置文件: $DEVCONTAINER_JSON"
@@ -37,7 +37,7 @@ fi
 # 4. VS Code 远程引导 (极致解耦)
 # workspacePath 必须指向项目的实际工作空间路径，以确保资源解析正确
 # 注意：URI authority 使用标准的 dev-container 标识
-WORKSPACE_FULL_PATH="${MNG_DIR}/volumes/dev/${PROJECT_NAME}/workspaces/${PROJECT_NAME}"
+WORKSPACE_FULL_PATH="/home/nick/workspaces/${PROJECT_NAME}"
 echo "正在云端启动项目：$PROJECT_NAME"
 JSON=$(printf '{"workspacePath":"%s","devcontainerPath":"%s"}' "$WORKSPACE_FULL_PATH" "$DEVCONTAINER_JSON")
 HEX=$(echo -n "$JSON" | xxd -p | tr -d '\n')

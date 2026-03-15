@@ -38,7 +38,7 @@ Vector 通过 `redis` 相关 source 插件接入：
 
 ### 4.2 关键监控指标
 - `redis_list_length`：监控特定任务队列的堆积情况。
-- `redis_memory_used_bytes`：监控 Redis 内存占用，防止超过 `ARCHITECTURE.md` 定义的限制（500MB）。
+- `redis_memory_used_bytes`：监控 Redis 内存占用，防止超过 `ARCHITECTURE.md` 定义的限制（1GB）。
 
 ## 5. 队列信息查看
 

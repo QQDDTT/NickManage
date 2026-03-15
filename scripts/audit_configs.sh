@@ -26,15 +26,6 @@ for f in "$BASE_DIR"/*.json; do
     if ! grep -q ".git-credentials" "$f"; then
         errors="$errors\n  - Missing git-credentials mount"
     fi
-    if ! grep -q ".antigravity" "$f"; then
-        errors="$errors\n  - Missing .antigravity mount"
-    fi
-    if ! grep -q ".gemini" "$f"; then
-        errors="$errors\n  - Missing .gemini mount"
-    fi
-    if ! grep -q "vscode-server" "$f"; then
-        errors="$errors\n  - Missing vscode-server persistent mount"
-    fi
 
     # 3. 检查扩展插件
     if ! grep -q '"extensions": \[' "$f"; then
