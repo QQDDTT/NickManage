@@ -4,9 +4,9 @@ services:
     image: mioyisama/whisper-server:latest
     container_name: share-whisper
     labels:
-      - "nms.collect=true"
-      - "nms.layer=share"
-      - "nms.proxy=false"
+      - "nms-bridge.collect=true"
+      - "nms-bridge.layer=share"
+      - "nms-bridge.proxy=false"
     env_file: .env
     restart: always
     ports:
@@ -26,8 +26,8 @@ services:
           memory: 1G
     oom_score_adj: -200
     networks:
-      - nms
+      - nms-bridge
 
 networks:
-  nms:
+  nms-bridge:
     external: true

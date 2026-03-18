@@ -70,7 +70,7 @@ bash ~/NickManage/Antigravity-Manage/open_workspace.sh
 - **职责**：在 `devcontainer` 内可以构建业务镜像 (`docker build`)、启动业务层容器 (`docker compose up`)。
 
 #### B. 与 Traefik 的交互 (路由接入)
-- **网络映射**：所有 `devcontainer` 必须加入 `nick-net` 网络。
+- **网络映射**：所有 `devcontainer` 必须加入 `nms-bridge` 网络。
 - **实现**：利用 Docker Label 或 `mounts` 导出 Traefik 动态配置。
 - **职责**：`devcontainer` 负责声明其访问域名（如 `project.dev.local`），Traefik 负责流量转发。
 
@@ -82,6 +82,6 @@ bash ~/NickManage/Antigravity-Manage/open_workspace.sh
 ---
 
 ## 5. 故障排查
-1. **网络问题**: 检查是否连接到 `nick-net`。
+1. **网络问题**: 检查是否连接到 `nms-bridge`。
 2. **权限问题**: 挂载目录权限应为 `755`，数据文件为 `640`。
 3. **内存溢出**: 检查 Compose 中的 `deploy.resources.limits.memory`。

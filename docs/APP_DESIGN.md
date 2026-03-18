@@ -19,7 +19,7 @@
 尽管应用层是去中心化的，但为了实现全系统的互联互通与自动化治理，所有业务容器必须遵循以下接入规则：
 
 ### 2.1 网络集成 (Network)
-- **强制规则**: 所有业务容器必须接入 `nick-net` 外部网桥。
+- **强制规则**: 所有业务容器必须接入 `nms-bridge` 外部网桥。
 - **目的**: 确保业务容器能够透明地访问共享层 (share) 的数据库、消息队列以及 AI 推理服务。
 
 ### 2.2 服务发现与反向代理 (Traefik)
@@ -50,7 +50,7 @@ graph TD
     T -- "HTTP Request" --> A
     A -- "Read/Write" --> DB
     A -- "Inference" --> AI
-    A -- "Join" --> nick-net["nick-net (External Bridge)"]
+    A -- "Join" --> nms-bridge["nms-bridge (External Bridge)"]
 ```
 
 ## 4. 管理优先级

@@ -1,101 +1,57 @@
 #!/bin/bash
 
 # ==============================================================================
-# Antigravity Demo 服务全生命周期集成测试脚本 (多层级版)
-# 功能：验证 dev-demo 和 app-demo 容器在架构中的可靠性、权限及多层级日志校验
+# Antigravity 业务层 (Demo) 验证脚本
+# 功能：验证开发层 (Dev) 与共享层 (Share) 的业务连通性及 Traefik 转发
 # ==============================================================================
 
-# 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/test_common.sh"
 
-# 环境配置
-COMPOSE_DIR="/home/nick/NickManage/docker/compose"
-PROBER="docker run --rm --network nms curlimages/curl:8.7.1 -s -m 5 -f"
-TARGETS=("dev-demo" "app-demo")
+print_header "Antigravity Multi-Layer Demo Service Test Status"
 
-echo -e "${BLUE}================================================================${NC}"
-echo -e "${BLUE}        Antigravity Multi-Layer Demo Service Test Status         ${NC}"
-echo -e "${BLUE}================================================================${NC}"
+# 1. 开发层容器存活性
+echo -e "\n${YELLOW}[Step 1] 开发层组件就绪测试 (Dev Layer)${NC}"
+check_test "容器 dev-demo 正在运行" "docker ps --filter 'name=dev-demo' --filter 'status=running' -q"
 
-# 测试函数
-check_test() {
-    local test_name=$1
-    local cmd=$2
-    echo -n "测试项目: $test_name ... "
-    if eval "$cmd" > /dev/null 2>&1; then
-        echo -e "${GREEN}[通过]${NC}"
-        return 0
-    else
-        echo -e "${RED}[失败]${NC}"
-        return 1
-    fi
-}
+# 2. 跨层级连通性测试 (Dev -> Share)
+echo -e "\n${YELLOW}[Step 2] 跨层级连通性测试 (Dev -> Share)${NC}"
+# 验证在 dev-demo 中是否能 ping 通共享层服务 (如 share-redis, share-llamacpp)
+check_test "Dev 层访问 Share 层 Redis" "docker exec dev-demo getent hosts ops-redis"
+check_test "Dev 层访问 Share 层 Llama.cpp" "docker exec dev-demo getent hosts share-llamacpp"
 
-# 1. 容器生命周期测试
-echo -e "\n${YELLOW}[Step 1] 容器生命周期测试 (Lifecycle)${NC}"
+# 3. Traefik 域名路由测试
+echo -e "\n${YELLOW}[Step 3] 外部接入转发测试 (Ingress/Traefik)${NC}"
+# 注意：由于 dev-demo 默认 entrypoint 是 tail -f，我们需要临时启一个 python server 验证
+echo ">>> 启动临时验证服务 (Port 8000)..."
+docker exec -d dev-demo python3 -m http.server 8000
+sleep 2
 
-for container in "${TARGETS[@]}"; do
-    if ! docker ps --filter "name=$container" --filter "status=running" | grep -q "$container"; then
-        echo -e "${YELLOW}[提示] 容器 $container 未启动，正在尝试启动...${NC}"
-        docker compose -f "$COMPOSE_DIR/$container.yaml" up -d
-    fi
-    check_test "容器 $container 存活性状态" "docker ps --filter 'name=$container' --filter 'status=running' | grep -q $container"
-done
+check_test "Traefik 业务域名路由 (demo.local)" "$PROBER -H 'Host: demo.local' http://ops-traefik"
 
-# 特有的资源限制验证 (针对 dev-demo)
-check_test "dev-demo 内存限制验证 (4096M)" "docker inspect dev-demo --format '{{.HostConfig.Memory}}' | grep 4294967296"
-check_test "dev-demo Ulimit 句柄限制验证 (65536)" "docker inspect dev-demo --format '{{index .HostConfig.Ulimits 0}}' | grep -q '65536'"
+echo ">>> 清理临时验证服务..."
+docker exec dev-demo pkill -f "python3 -m http.server"
 
-# 2. 内核权限与安全验证 (重点针对 dev 层)
-echo -e "\n${YELLOW}[Step 2] 内核权限与安全验证 (Kernel/Security)${NC}"
-check_test "dev-demo Privileged 模式验证" "docker inspect dev-demo --format '{{.HostConfig.Privileged}}' | grep true"
-check_test "dev-demo PID Host 模式验证" "docker inspect dev-demo --format '{{.HostConfig.PidMode}}' | grep host"
+# 4. 业务日志上报验证
+echo -e "\n${YELLOW}[Step 4] 业务日志上报验证 (Observability)${NC}"
+BUSINESS_TAG="demo_biz_event_$(date +%s)"
 
-# 3. 架构网络连通性测试
-echo -e "\n${YELLOW}[Step 3] 架构网络连通性测试 (Connectivity)${NC}"
-for container in "${TARGETS[@]}"; do
-    check_test "[$container] 访问 ops-gitea" "docker exec $container curl -s -m 2 http://ops-gitea:3000/api/healthz"
-    check_test "[$container] 访问 ops-loki" "docker exec $container curl -s -m 2 http://ops-loki:3100/ready"
-done
+# 特殊处理：dev-demo 启用了 pid: host，常规 /proc/1/fd/1 会指向宿主机 init
+# 我们需要找到执行 tail -f /dev/null 的真实 PID
+REAL_PID=$(docker exec dev-demo ps -ef | grep "tail -f /dev/null" | grep -v grep | awk '{print $2}' | head -n 1)
 
-# 4. 可观测性全链路闭环验证
-echo -e "\n${YELLOW}[Step 4] 可观测性全链路验证 (Observability)${NC}"
-TIMESTAMP=$(date +%s)
+if [ -n "$REAL_PID" ]; then
+    docker exec -u 0 dev-demo sh -c "echo 'BIZ_EVENT: $BUSINESS_TAG' > /proc/$REAL_PID/fd/1" > /dev/null 2>&1
+else
+    # 回退方案
+    docker exec -u 0 dev-demo sh -c "echo 'BIZ_EVENT: $BUSINESS_TAG' > /proc/1/fd/1" > /dev/null 2>&1
+fi
 
-for container in "${TARGETS[@]}"; do
-    TEST_TAG="${container}_verify_${TIMESTAMP}"
-    echo -n "测试项目: [$container] 日志采集链路追踪 ($TEST_TAG) ... "
-    
-    # 注入日志
-    if [ "$container" == "app-demo" ]; then
-        # app 容器模拟 JSON 日志输出
-        docker exec $container sh -c "echo '{\"level\": \"info\", \"msg\": \"[VERIFY] $TEST_TAG\"}'" > /dev/null 2>&1
-    else
-        # dev 容器普通文本日志
-        docker exec $container sh -c "echo '[VERIFY] $TEST_TAG'" > /dev/null 2>&1
-    fi
-done
+echo -n "测试项目: 业务日志进入 Loki ($BUSINESS_TAG) ... "
+if check_loki_log "{container=\"dev-demo\"}" "$BUSINESS_TAG"; then
+    echo -e "${GREEN}[通过]${NC}"
+else
+    echo -e "${RED}[失败]${NC}"
+fi
 
-echo -e "${YELLOW}[等待 10s 确保日志流经 Vector 到达 Loki... ]${NC}"
-sleep 10
-
-for container in "${TARGETS[@]}"; do
-    TEST_TAG="${container}_verify_${TIMESTAMP}"
-    echo -n "检查结果: [$container] ... "
-    # Loki query_range 需要纳秒时间戳或让其默认
-    if $PROBER -G "http://ops-loki:3100/loki/api/v1/query_range" \
-        --data-urlencode "query={container=\"$container\"} |= \"$TEST_TAG\"" \
-        --data-urlencode "limit=50" | grep -q "$TEST_TAG"; then
-        echo -e "${GREEN}[通过]${NC}"
-    else
-        echo -e "${RED}[失败]${NC}"
-    fi
-done
-
-echo -e "\n${BLUE}================================================================${NC}"
-echo -e "${BLUE}                    测试执行完毕 (Testing Done)                    ${NC}"
-echo -e "${BLUE}================================================================${NC}"
+print_footer

@@ -5,9 +5,9 @@ services:
     image: qdrant/qdrant
     container_name: share-qdrant
     labels:
-      - "nms.collect=true"
-      - "nms.layer=share"
-      - "nms.proxy=false"
+      - "nms-bridge.collect=true"
+      - "nms-bridge.layer=share"
+      - "nms-bridge.proxy=false"
     env_file: .env
     restart: always
     ports:
@@ -20,7 +20,7 @@ services:
           memory: 256M
     oom_score_adj: -500
     networks:
-      - nms
+      - nms-bridge
 
 volumes:
   share_qdrant_data:
@@ -31,5 +31,5 @@ volumes:
       device: ${MNG_HOME}/volumes/share/qdrant
 
 networks:
-  nms:
+  nms-bridge:
     external: true

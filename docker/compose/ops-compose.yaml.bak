@@ -21,13 +21,11 @@ services:
       - SERVICES=0
       - TASKS=0
       - NETWORKS=1
-      - NODES=0
       - VOLUMES=0
       - IMAGES=1
       - INFO=1
       - EVENTS=1
       - PING=1
-      - LOGS=1        # 允许读取容器日志，供 Vector 使用
       - POST=1        # 允许写操作 (Stop/Restart)
       - DELETE=0      # 显式禁止删除操作
     volumes:
@@ -167,7 +165,7 @@ services:
       - "nms-bridge.collect=true"
       - "nms-bridge.layer=ops"
       - "nms-bridge.proxy=false"
-    mem_limit: 1024m
+    mem_limit: 200m
     oom_score_adj: -999
     volumes:
       - ${MNG_HOME}/volumes/ops/loki.yaml:/etc/loki/local-config.yaml:ro
@@ -187,10 +185,10 @@ services:
       - "nms-bridge.proxy=false"
     mem_limit: 100m
     oom_score_adj: -999
-    environment:
-      - VECTOR_LOG=debug
+    environment: []
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ${MNG_HOME}/volumes/ops/vector.yaml:/etc/vector/vector.yaml:ro
       - ${LOG_HOME}/vector:/var/lib/vector
     command: ["--watch-config"]

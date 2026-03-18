@@ -4,9 +4,18 @@ services:
     container_name: dev-demo
     hostname: dev-demo
     labels:
-      - "nms.collect=false"
-      - "nms.layer=dev"
-      - "nms.proxy=false"
+      - "nms-bridge.collect=true"
+      - "nms-bridge.layer=dev"
+      - "nms-bridge.proxy=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.dev-demo.rule=Host(`demo.local`)"
+      - "traefik.http.routers.dev-demo.entrypoints=web"
+      - "traefik.http.services.dev-demo.loadbalancer.server.port=8000"
+      # 并发限制 (Guest Limit)
+      - "traefik.http.middlewares.guest-limit.ratelimit.average=10"
+      - "traefik.http.middlewares.guest-limit.ratelimit.burst=20"
+      - "traefik.http.middlewares.guest-limit.ratelimit.period=1s"
+      - "traefik.http.routers.dev-demo.middlewares=guest-limit"
     env_file: .env
     
     # --- 1. 权限与内核安全解锁 ---
@@ -52,14 +61,18 @@ services:
       - /bin/sh
       - -c
       - |
+        apt-get update && apt-get install -y python3
+        mkdir -p /etc/sudoers.d
+        id -u vscode >/dev/null 2>&1 || useradd -m -s /bin/bash vscode
         echo 'vscode ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/nopasswd-vscode
-        chown vscode:vscode /home/vscode/.cache
+        mkdir -p /home/vscode/.cache
+        chown -R vscode:vscode /home/vscode
         chown -R vscode:vscode /workspaces/$$PROJECT_NAME 2>/dev/null
         exec tail -f /dev/null
 
     networks:
-      - nms
+      - nms-bridge
 
 networks:
-  nms:
+  nms-bridge:
     external: true

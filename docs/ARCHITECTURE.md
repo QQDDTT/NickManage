@@ -67,13 +67,13 @@
 <网络名>.<标签名>
 ```
 
-**示例**：`nms.ops`、`nms.share`、`nms.app`
+**示例**：`nms-bridge.ops`、`nms-bridge.share`、`nms-bridge.app`
 
 ### 6.2 容器标签定义
 
-每个容器通过 Docker Labels 声明自身属性，供各层基础设施（Vector、Traefik 等）自动发现与配置。
+每个容器通过 Docker Labels 声明自身属性，供各层基础设施（Vector、Traefik 等）自动发现与配置。所有标签均以网络名为前缀。
 
-#### `<网络名>.collect`
+#### `nms-bridge.collect`
 
 控制 **Vector** 是否采集该容器的日志。
 
@@ -84,7 +84,7 @@
 
 ```yaml
 labels:
-  nms.collect: "true"
+  nms-bridge.collect: "true"
 ```
 
 #### `<网络名>.layer`
@@ -100,7 +100,7 @@ labels:
 
 ```yaml
 labels:
-  nms.layer: "ops"
+  nms-bridge.layer: "ops"
 ```
 
 #### `<网络名>.proxy`
@@ -114,7 +114,7 @@ labels:
 
 ```yaml
 labels:
-  nms.proxy: "true"
+  nms-bridge.proxy: "true"
 ```
 
 ### 6.3 标签组合示例
@@ -122,21 +122,21 @@ labels:
 ```yaml
 # 底座层服务（以 Traefik 自身为例）
 labels:
-  nms.collect: "false"   # Traefik 本身不被 Vector 采集
-  nms.layer: "ops"       # 归属底座层
-  nms.proxy: "false"     # Traefik 不监控自身
+  nms-bridge.collect: "false"   # Traefik 本身不被 Vector 采集
+  nms-bridge.layer: "ops"       # 归属底座层
+  nms-bridge.proxy: "false"     # Traefik 不监控自身
 
 # 共享层业务服务（以 PostgreSQL 为例）
 labels:
-  nms.collect: "true"    # 日志由 Vector 采集
-  nms.layer: "share"     # 归属共享层
-  nms.proxy: "false"     # 无需 HTTP 路由
+  nms-bridge.collect: "true"    # 日志由 Vector 采集
+  nms-bridge.layer: "share"     # 归属共享层
+  nms-bridge.proxy: "false"     # 无需 HTTP 路由
 
 # 业务层 Web 服务（以某 App 为例）
 labels:
-  nms.collect: "true"    # 日志由 Vector 采集
-  nms.layer: "app"       # 归属业务层
-  nms.proxy: "true"      # 由 Traefik 统一对外路由
+  nms-bridge.collect: "true"    # 日志由 Vector 采集
+  nms-bridge.layer: "app"       # 归属业务层
+  nms-bridge.proxy: "true"      # 由 Traefik 统一对外路由
 
 ---
 

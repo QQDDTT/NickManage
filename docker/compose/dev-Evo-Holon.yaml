@@ -4,9 +4,18 @@ services:
     container_name: dev-Evo-Holon
     hostname: dev-Evo-Holon
     labels:
-      - "nms.collect=false"
-      - "nms.layer=dev"
-      - "nms.proxy=false"
+      - "nms-bridge.collect=true"
+      - "nms-bridge.layer=dev"
+      - "nms-bridge.proxy=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.dev-Evo-Holon.rule=Host(`evo-holon.local`)"
+      - "traefik.http.routers.dev-Evo-Holon.entrypoints=web"
+      - "traefik.http.services.dev-Evo-Holon.loadbalancer.server.port=8000"
+      # 并发限制 (Guest Limit)
+      - "traefik.http.middlewares.guest-limit.ratelimit.average=10"
+      - "traefik.http.middlewares.guest-limit.ratelimit.burst=20"
+      - "traefik.http.middlewares.guest-limit.ratelimit.period=1s"
+      - "traefik.http.routers.dev-Evo-Holon.middlewares=guest-limit"
     env_file: .env
     
     # --- 1. 权限与核心安全解锁 ---
@@ -61,8 +70,8 @@ services:
         exec tail -f /dev/null
 
     networks:
-      - nms
+      - nms-bridge
 
 networks:
-  nms:
+  nms-bridge:
     external: true

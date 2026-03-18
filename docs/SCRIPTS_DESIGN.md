@@ -8,7 +8,8 @@
 scripts/
 ├── load_env.sh              # 核心脚本：加载全局环境变量到当前 Shell
 ├── Antigravity-Manage/      # AI Agent 专用的启动与管理逻辑
-└── Docker-Manage/           # 通用 Docker 容器运维工具（重启、清理、日志查看等）
+├── Docker-Manage/           # 通用 Docker 容器运维工具
+└── backups/                 # 自动化备份脚本 (Share 层数据与 Dev 层代码)
 ```
 
 ## 2. 核心机制：环境变量加载 (load_env.sh)

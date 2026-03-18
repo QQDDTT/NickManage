@@ -4,9 +4,9 @@ services:
     image: timescale/timescaledb:latest-pg15
     container_name: share-postgres
     labels:
-      - "nms.collect=true"
-      - "nms.layer=share"
-      - "nms.proxy=false"
+      - "nms-bridge.collect=true"
+      - "nms-bridge.layer=share"
+      - "nms-bridge.proxy=false"
     env_file: .env
     restart: always
     ports:
@@ -21,7 +21,7 @@ services:
           memory: 256M
     oom_score_adj: -800
     networks:
-      - nms
+      - nms-bridge
 
 volumes:
   share_postgres_data:
@@ -32,5 +32,5 @@ volumes:
       device: ${MNG_HOME}/volumes/share/postgres
 
 networks:
-  nms:
+  nms-bridge:
     external: true

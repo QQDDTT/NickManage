@@ -19,6 +19,8 @@
 
 ### 2.2 核心配置挂载 (Uniform Identity)
 所有 devcontainer 必须在 `devcontainer.json` 的 `mounts` 属性中挂载以下路径：
+*   **用户权限映射**:
+    - **强制要求**: 容器内 `vscode` 用户的 UID/GID 必须强制映射为宿主机用户 `nick` 的 `1000:1000`，确保文件所有权的一致性。
 *   **Git 配置**：
     *   `source=${MNG_HOME}/volumes/share/git/gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly=true`
     *   `source=${MNG_HOME}/volumes/share/git/.git-credentials,target=/home/vscode/.git-credentials,type=bind,readonly=true`

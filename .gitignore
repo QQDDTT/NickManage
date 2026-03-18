@@ -18,3 +18,4 @@ volumes/*/*/*/**
 !volumes/**/.gitkeep
 
 .env
+backups/

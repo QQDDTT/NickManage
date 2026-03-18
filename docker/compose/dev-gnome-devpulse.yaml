@@ -1,0 +1,35 @@
+name: gnome-devpulse
+
+services:
+  devcontainer:
+    image: ubuntu:24.04
+    container_name: dev-gnome-devpulse
+
+    volumes:
+      # ── 项目源码（直接挂载宿主机的扩展目录）──────────────────
+      - type: bind
+        source: /home/nick/.local/share/gnome-shell/extensions/devpulse@nickmanage.local
+        target: /workspace/gnome-shell/extensions/devpulse@nickmanage.local
+
+      # ── 扩展热部署目标（宿主机用户级 extensions 目录）────────────
+      - type: bind
+        source: ${HOME}/.local/share/gnome-shell/extensions/devpulse@nickmanage.local
+        target: /ext-deploy
+
+      # ── npm 缓存持久化 ───────────────────────────────────────────
+      - npm-cache:/home/developer/.npm
+
+    environment:
+      EXTENSION_UUID: "devpulse@nickmanage.local"
+      GNOME_EXTENSIONS_DIR: "/ext-deploy"
+
+    working_dir: /workspace/gnome-shell/extensions/devpulse@nickmanage.local
+
+    # devcontainer 保持容器存活
+    command: sleep infinity
+
+    user: developer
+
+volumes:
+  npm-cache:
+    name: gnome-devpulse-npm-cache

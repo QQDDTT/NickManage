@@ -23,6 +23,13 @@ if [ ! -d "$WORKSPACE_DIR" ]; then
     exit 1
 fi
 
+# 处理命令行参数
+if [[ "$1" == "-u" ]]; then
+    echo -e "${YELLOW}正在通过命令行触发更新...${RESET}"
+    sudo bash "$(dirname "$0")/update_antigravity.sh"
+    exit $?
+fi
+
 while true; do
     clear
     echo -e "${BLUE}以下是 /home/nick/workspaces 下的所有项目文件夹：${RESET}"
@@ -36,7 +43,9 @@ while true; do
     echo -e "${BLUE}以下是其他项目：${RESET}"
     echo -e "${YELLOW}t. 文档${RESET}"
     echo -e "${YELLOW}s. 自定义系统工具${RESET}"
+    echo -e "${YELLOW}e. GNOME 扩展 (gnome-devpulse)${RESET}"
     echo -e "${YELLOW}l. 日志${RESET}"
+    echo -e "${YELLOW}u. 更新 Antigravity${RESET}"
     echo -e "${YELLOW}q. 退出${RESET}"
 
     echo -n -e "${YELLOW}请输入你想要打开的项目编号: ${RESET}"
@@ -57,10 +66,27 @@ while true; do
         echo -e "${GREEN}正在打开：自定义系统工具${RESET}"
         antigravity --no-sandbox "/home/nick/NickManage"
         exit 0
+    elif [[ "$folder_number" =~ ^[Ee]$ ]]; then
+        echo -e "${GREEN}正在打开：GNOME 扩展 (gnome-devpulse)${RESET}"
+        # 特殊项目：路径与常规不同
+        WORKSPACE_PATH="/home/nick/.local/share/gnome-shell/extensions/devpulse@nickmanage.local"
+        DEVCONTAINER_JSON="${WORKSPACE_PATH}/.devcontainer/devcontainer.json"
+        CONTAINER_PROJECT_PATH="/workspace/gnome-shell/extensions/devpulse@nickmanage.local"
+
+        JSON=$(printf '{"workspacePath":"%s","devcontainerPath":"%s"}' "$WORKSPACE_PATH" "$DEVCONTAINER_JSON")
+        HEX=$(echo -n "$JSON" | xxd -p | tr -d '\n')
+        antigravity --no-sandbox --folder-uri "vscode-remote://dev-container+${HEX}${CONTAINER_PROJECT_PATH}"
+        exit 0
     elif [[ "$folder_number" =~ ^[Ll]$ ]]; then
         echo -e "${GREEN}正在打开：日志${RESET}"
         antigravity --no-sandbox "$LOG_HOME"
         exit 0
+    elif [[ "$folder_number" =~ ^[Uu]$ ]]; then
+        echo -e "${YELLOW}正在启动更新程序...${RESET}"
+        sudo bash "$(dirname "$0")/update_antigravity.sh"
+        # 更新后可能需要重启脚本以应用环境变化（虽然此处主要是更新 IDE 二进制文件）
+        echo -e "${GREEN}更新任务已处理。${RESET}"
+        read -p "按任意键返回菜单..."
     elif [[ "$folder_number" =~ ^[Qq]$ ]]; then
         read -p "按 Enter 退出..."
         exit 0

@@ -5,9 +5,9 @@ services:
     image: artrajz/vits-simple-api:latest
     container_name: share-vits
     labels:
-      - "nms.collect=true"
-      - "nms.layer=share"
-      - "nms.proxy=false"
+      - "nms-bridge.collect=true"
+      - "nms-bridge.layer=share"
+      - "nms-bridge.proxy=false"
     env_file: .env
     restart: always
     ports:
@@ -21,8 +21,8 @@ services:
           memory: 2G
     oom_score_adj: -500
     networks:
-      - nms
+      - nms-bridge
 
 networks:
-  nms:
+  nms-bridge:
     external: true

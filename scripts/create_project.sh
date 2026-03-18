@@ -54,7 +54,7 @@ cat > "${DEVCONTAINER_FILE}" <<EOF
     "GIT_USER_EMAIL": "\${localEnv:GITEA_USER_EMAIL}"
   },
   "runArgs": [
-    "--network=nms",
+    "--network=nms-bridge",
     "--name=dev-${PROJECT_NAME}"
   ],
   "postCreateCommand": "echo '正在准备工作空间...' && mkdir -p \${containerWorkspaceFolder} && git config --global --add safe.directory \${containerWorkspaceFolder} && cd \${containerWorkspaceFolder} && [ -d .git ] || (git init . && git remote add origin http://ops-gitea:3000/nick/${PROJECT_NAME}.git && git fetch origin && git checkout -f master || true)",
@@ -66,6 +66,8 @@ cat > "${DEVCONTAINER_FILE}" <<EOF
 }
 EOF
 
+# 2.1 补充说明：容器内 vscode 用户 UID 映射已由底座层通过环境纠正和 gitconfig 挂载实现。
+
 # 3. 生成 dev-<项目名>.yaml (无特定编程语言挂载)
 echo "-> 3. 生成 dev-${PROJECT_NAME}.yaml ..."
 cat > "${COMPOSE_DIR}/dev-${PROJECT_NAME}.yaml" <<EOF
@@ -74,9 +76,9 @@ services:
     image: dev-image:latest
     container_name: dev-${PROJECT_NAME}
     labels:
-      - "nms.collect=true"
-      - "nms.layer=dev"
-      - "nms.proxy=false"
+      - "nms-bridge.collect=true"
+      - "nms-bridge.layer=dev"
+      - "nms-bridge.proxy=false"
     env_file: .env
     
     # --- 1. 权限与内核安全解锁 ---
@@ -122,10 +124,10 @@ services:
       "
 
     networks:
-      - nms
+      - nms-bridge
 
 networks:
-  nms:
+  nms-bridge:
     external: true
 EOF
 
